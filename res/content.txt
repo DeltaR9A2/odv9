@@ -1,0 +1,117 @@
+SCENE new_game
+TITLE New Game
+PROSE
+| Are you ready to begin the adventure?
+OPTION forest_cave Yes, I am ready.
+OPTION exit_game No, maybe later.
+
+SCENE exit_game
+TITLE Exit Game
+PROSE
+| Game should exit before you read this.
+ON_ENTER
+| EXIT
+
+SCENE forest_wilderness
+TITLE The Wilderness
+BGIMG bg_forest_wilderness.png
+PROSE
+| The forest stretches on for miles in every direction. The trees are
+| ancient, and the forest floor is thick with brush and fallen branches.
+| It would be easy to get lost here, so you consider your options before
+| setting out. Based on your map and knowledge of the area, you decide to...
+OPTION forest_cave travel to the cave marked on the old man's map.
+OPTION forest_wandering wander aimlessly, hoping to stumble across something.
+
+SCENE forest_wandering
+TITLE The Wilderness
+BGIMG bg_forest_wandering.png
+PROSE
+| This forest is vast, and progress is slow. You'll never be able
+| to find anything new just by searching on foot. You'll need to rely on
+| maps or directions of some kind to find your way. Realizing this, you...
+OPTION forest_wilderness Stop and choose a destination.
+
+SCENE forest_cave
+TITLE Forest Cave
+BGIMG bg_cave_in_a_forest.png
+PROSE
+| Deep in the forest there is a cave hidden amidst the trees. The area is
+| calm and peaceful. Branches sway in the breeze, and you are surrounded
+| by the sounds of the forest.
+OPTION forest_cave_observe Observe the cave from a distance.
+OPTION crys_cave_entr Approach the cave entrance.
+OPTION forest_wilderness Leave this place, returning to the wilderness.
+
+SCENE forest_cave_observe
+TITLE Observing the Cave
+BGIMG bg_cave_in_a_forest.png
+PROSE
+| The cave is little more than a dark hole in a stone cliff face. It looks
+| like a natural cavern; the surrounding stone is smooth and ancient, shaped
+| by erosion. Observing for a short time, you see no signs of activity. It
+| seems safe to approach, so you...
+OPTION crys_cave_entr Approach the cave entrance.
+OPTION forest_cave Stay here for now.
+SCENE crys_cave_entr
+TITLE Cave Entrance
+BGIMG bg_tunnel_to_light.png
+PROSE
+| Just inside the cave mouth. Forest to the south, tunnel to the north.
+| No sign of wildlife or other people. The tunnel ahead is dark, but there
+| is a faint bluish light in the distance. You...
+OPTION crys_cave_deep Travel deeper into the cave.
+OPTION forest_cave Leave the cave, returning to the forest.
+
+SCENE crys_cave_deep
+TITLE The Crystal Cavern
+BGIMG back_001.png
+PROSE
+| Deep in the cavern, the cold air smells of wet stone and a hint of
+| ozone. The walls in this area are studded with softly glowing crystals
+| of various colors and sizes.
+OPTION crys_cave_bottom Go deeper along the main tunnel.
+OPTION crys_cave_west Follow a side tunnel to the west.
+OPTION crystal_pull Inspect the crystals more closely.
+OPTION crys_cave_entr Return to the cave entrance.
+
+SCENE crys_cave_west
+TITLE Dark Hollow
+PROSE
+| There is a small chamber at the end of a short passage, west from the
+| main tunnel. There are no crystals here, leaving the chamber in shadow.
+| There doesn't seem to be anything of use here, so you...
+OPTION crys_cave_west_search Search the chamber more carefully.
+OPTION crys_cave_west_rest Rest here for a bit, concealed by the shadows.
+OPTION crys_cave_deep Return to the main passage.
+
+SCENE crys_cave_bottom
+TITLE The Crystal Core
+PROSE
+| The main passage ends in a large chamber dominated by a huge glowing crystal.
+| It hums with energy and getting closer may be dangerous, but the floor near it
+| is scattered with loose glowing crystals. They would be quite valuable if you
+| could retrieve them.
+OPTION crys_cave_deep Leave this chamber, moving back toward the entrance.
+
+SCENE crys_cave_west_rest
+TITLE A Short Rest
+PROSE
+| This corner of the cavern is quiet and relatively dry. You rest for a time,
+| regaining some of your strength. Eventually, you...
+OPTION crys_cave_west Finish resting.
+
+SCENE crys_cave_west_search
+TITLE Searching the Dark Hollow
+PROSE
+| Groping around in the darkness, you can't find anything of note. There
+| is a faint sense of energy as if some sort of magic is present, but
+| you cannot find the source. You decide to...
+OPTION crys_cave_west Abandon the search for now.
+
+SCENE crystal_pull
+TITLE Collecting Crystals
+PROSE
+| The crystals are stuck fast in the cave walls. It will not be easy to
+| pull them loose. You...
+OPTION crys_cave_deep Leave the crystals for now.
