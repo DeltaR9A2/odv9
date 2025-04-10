@@ -20,8 +20,8 @@ PROSE
 | ancient, and the forest floor is thick with brush and fallen branches.
 | It would be easy to get lost here, so you consider your options before
 | setting out. Based on your map and knowledge of the area, you decide to...
-OPTION forest_cave travel to the cave marked on the old man's map.
-OPTION forest_wandering wander aimlessly, hoping to stumble across something.
+OPTION forest_cave Travel to the Crystal Cavern.
+OPTION forest_wandering Wander aimlessly, hoping to stumble across something.
 
 SCENE forest_wandering
 TITLE The Wilderness
@@ -53,6 +53,7 @@ PROSE
 | seems safe to approach, so you...
 OPTION crys_cave_entr Approach the cave entrance.
 OPTION forest_cave Stay here for now.
+
 SCENE crys_cave_entr
 TITLE Cave Entrance
 BGIMG bg_tunnel_to_light.png
@@ -115,3 +116,13 @@ PROSE
 | The crystals are stuck fast in the cave walls. It will not be easy to
 | pull them loose. You...
 OPTION crys_cave_deep Leave the crystals for now.
+
+SCENE scifi_horror_door
+TITLE The Horror Dimension
+PROSE
+| This room is dark, with cold metallic walls and floor. The only exit
+| is an open doorway lit by an eerie blue glow on the other side.
+OPTION forest_wilderness Exit the Horror Dimension, returning to the forest.
+
+SCENE forest_wilderness
+OPTION scifi_horror_door Step through a portal to the Horror Dimension.

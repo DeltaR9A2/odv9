@@ -22,5 +22,6 @@ void parse_file(const char *fn);
 
 scene_t *get_scene_by_idstr(const char *idstr);
 
+int scene_option_count(const scene_t *s);
 
 #endif

@@ -272,6 +272,6 @@ void game_state_step(void){
     //SDL_SetSurfaceColorMod(slide_buffer, slide_alpha, slide_alpha, slide_alpha);
     SDL_BlitSurface(slide_buffer, NULL, SCREEN_SURFACE, &slide_position);
     //slide_position.x += 0.03*WIN_VW;
-    slide_alpha -= 5;
+    slide_alpha -= 20;
   }
 }

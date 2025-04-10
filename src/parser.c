@@ -34,10 +34,10 @@ scene_t *get_scene(const char *key){
   if(scene == NULL){
     printf("Creating scene: [%s]\n", key);
     scene = calloc(1, sizeof(scene_t));
-    strcpy(scene->title, "Default Title");
-    strcpy(scene->prose, "Default Prose");
+    strcpy(scene->title, key);
+    strcpy(scene->prose, key);
     for(int i=0;i<6;i++){
-      strcpy(scene->options[i].label, "Unset Option");
+      strcpy(scene->options[i].label, "unset");
     }
     shput(scene_index, key, scene);
   }
@@ -76,9 +76,9 @@ void parse_file(const char *fn){
       sscanf(&read_buffer[buffer_pos], "%s", idstr);
       //printf("Arg1: [%s]\n", idstr);
       selected_scene = get_scene(idstr);
-      strcpy(selected_scene->title, idstr);
-      strcpy(selected_scene->prose, idstr);
-      opt_n = 0;
+      //strcpy(selected_scene->title, idstr);
+      //strcpy(selected_scene->prose, idstr);
+      opt_n = scene_option_count(selected_scene);
       continue;
     }else if(strcmp(command, "OPTION") == 0){
       if(selected_scene != NULL){
@@ -168,6 +168,17 @@ void clean_string(char *target_string){
   return;
 }
 
+int scene_option_count(const scene_t *s){
+	int count = 0;
+	for(int i=0; i<6; i++){
+		if(s->options[6].enabled){
+			count += 1;
+		}else{
+			break;
+		}
+	}
+	return count;
+}
 
 
 
