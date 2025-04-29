@@ -165,7 +165,7 @@ void game_state_init(void){
   inset_dst_rect.h = inset_image->h;
   inset_dst_rect.x = WIN_VW - (inset_dst_rect.w+16+right_sidebar_rect.w);
   inset_dst_rect.y = WIN_VH - (inset_dst_rect.h+16);
-  inset_image = NULL; //debug test
+  inset_image = NULL; // test
 
   pointer_image = get_image("option_pointer.png");
   pointer_rect.x =  0; pointer_rect.y =  0;
@@ -228,13 +228,13 @@ void game_state_step(void){
   y += font_wrap_string(
         font_header,
         current_scene->title,
-        x, y, bg_dst_rect.w - 256,
+        x, y, bg_dst_rect.w - 360,
         SCREEN_SURFACE);
 
   y += font_wrap_string(
         font_normal,
         current_scene->prose,
-        x, y, bg_dst_rect.w - 256,
+        x, y, bg_dst_rect.w - 360,
         SCREEN_SURFACE);
 
 

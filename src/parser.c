@@ -171,7 +171,7 @@ void clean_string(char *target_string){
 int scene_option_count(const scene_t *s){
 	int count = 0;
 	for(int i=0; i<6; i++){
-		if(s->options[6].enabled){
+		if(s->options[i].enabled){
 			count += 1;
 		}else{
 			break;

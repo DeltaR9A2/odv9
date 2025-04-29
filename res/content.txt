@@ -119,10 +119,22 @@ OPTION crys_cave_deep Leave the crystals for now.
 
 SCENE scifi_horror_door
 TITLE The Horror Dimension
+BGIMG bg_eerie_blue_door_r.png
 PROSE
 | This room is dark, with cold metallic walls and floor. The only exit
 | is an open doorway lit by an eerie blue glow on the other side.
+OPTION scifi_horror_corridor Explore further.
 OPTION forest_wilderness Exit the Horror Dimension, returning to the forest.
+
+SCENE scifi_horror_corridor
+TITLE The Red Corridor
+BGIMG bg_ominous_red_corridor.png
+PROSE
+| This corridor is lit only by a garish red light shining through an open
+| door at the far end. The air is close and humid; condensation glistens
+| on the cold metal walls. You can just barely hear the constant on-off
+| screech of a warning klaxon in the distance.
+OPTION scifi_horror_door Flee from this awful place.
 
 SCENE forest_wilderness
 OPTION scifi_horror_door Step through a portal to the Horror Dimension.
