@@ -19,6 +19,16 @@
 #include "dv_image_cache.h"
 #include "dv_raster_font.h"
 
+#define INITIAL_WINDOW_W 1280
+#define INITIAL_WINDOW_H 720
+
+#define VIRTUAL_SCREEN_W 640
+#define VIRTUAL_SCREEN_H 360
+
+#define TITLE_WRAP_W 520
+#define PROSE_WRAP_W 360
+#define OPTION_WRAP_W 520
+
 double clamp(double d, double min, double max) {
   const double t = d < min ? min : d;
   return t > max ? max : t;
@@ -30,9 +40,9 @@ static SDL_Renderer *REND;
 static SDL_Surface *SCREEN_SURFACE;
 static SDL_Texture *SCREEN_TEXTURE;
 
-static double WIN_VW = 640, WIN_VH = 360;
-static double WIN_CW = 640, WIN_CH = 360;
-static SDL_Rect ACTIVE_RECT = {0, 0, 640, 360};
+static double WIN_VW = VIRTUAL_SCREEN_W, WIN_VH = VIRTUAL_SCREEN_H;
+static double WIN_CW = INITIAL_WINDOW_W, WIN_CH = INITIAL_WINDOW_H;
+static SDL_Rect ACTIVE_RECT = {0, 0, 0, 0};
 
 void recalculate_screen_scale_and_position(void){
   double h_scale = (int)((double)WIN_CW / (double)WIN_VW);
@@ -62,13 +72,9 @@ int32_t main(void){
 
   RUNNING = true;
 
-  WIN_CW = WIN_VW*2;
-  WIN_CH = WIN_VH*2;
-
   WINDOW = SDL_CreateWindow("game",
               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
               WIN_CW, WIN_CH, SDL_WINDOW_RESIZABLE);
-
   if(WINDOW == NULL){ printf("%s\n", SDL_GetError()); fflush(stdout); exit(1); }
 
   REND = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -78,6 +84,8 @@ int32_t main(void){
 
   controller_init();
   game_state_init();
+
+  recalculate_screen_scale_and_position();
 
   SDL_AddEventWatch(&main_event_watch, 0);
   double cms = 0, pms = 0, msd = 0, msa = 0, mspf = 10;
@@ -89,7 +97,7 @@ int32_t main(void){
 
       SDL_UpdateTexture(SCREEN_TEXTURE, NULL, SCREEN_SURFACE->pixels, SCREEN_SURFACE->pitch);
       SDL_RenderClear(REND);
-      SDL_RenderCopy(REND, SCREEN_TEXTURE, NULL, NULL);
+      SDL_RenderCopy(REND, SCREEN_TEXTURE, NULL, &ACTIVE_RECT);
       SDL_RenderPresent(REND);
     }
     fflush(stdout);
@@ -102,13 +110,10 @@ int32_t main(void){
 #define MAX_TITLE_LENGTH 256
 #define MAX_PROSE_LENGTH 1024
 
-#define MAX_OPT_INDEX 5
 #define MAX_OPT_COUNT 6
+#define MAX_OPT_INDEX 5
 #define MAX_OPT_LABEL_LENGTH 128
 
-#define TITLE_WRAP_W 600
-#define PROSE_WRAP_W 360
-#define OPTION_WRAP_W 600
 
 char current_title[MAX_TITLE_LENGTH];
 char current_prose[MAX_TITLE_LENGTH];
@@ -126,6 +131,8 @@ static option_t current_options[MAX_OPT_COUNT];
 static font_t *font_header;
 static font_t *font_bright;
 static font_t *font_dimmed;
+static font_t *font_grayed;
+static font_t *font_nogood;
 static font_t *font_golden;
 static font_t *font_invert;
 static font_t *font_normal;
@@ -149,35 +156,23 @@ static int selected_option_index;
 void scn_new_game(void);
 
 void game_state_init(void){
-  font_header = font_create("font_alkhemikal_gold.png");
+  font_header = font_create("font_alkhemikal_16_golden.png");
 
   font_bright = font_create("font_mnemonika_16_bright.png");
   font_dimmed = font_create("font_mnemonika_16_dimmed.png");
+  font_grayed = font_create("font_mnemonika_16_grayed.png");
+  font_nogood = font_create("font_mnemonika_16_nogood.png");
   font_golden = font_create("font_mnemonika_16_golden.png");
   font_invert = font_create("font_mnemonika_16_invert.png");
   font_normal = font_create("font_mnemonika_16_normal.png");
 
   background_image = background_blank = get_image("art_blank.png");
-  
-  bg_dst_rect.w = WIN_VW;
-  bg_dst_rect.h = WIN_VH;
-  bg_dst_rect.x = 0;
-  bg_dst_rect.y = 0;
 
-  bg_src_rect.w = WIN_VW;
-  bg_src_rect.h = WIN_VH;
-  bg_src_rect.y = (background_image->h - bg_src_rect.h)/2;
-  bg_src_rect.x = (background_image->w - bg_src_rect.w)/2;
-
-  pointer_image = get_image("option_pointer.png");
+  pointer_image = get_image("cursor_arrow.png");
   pointer_rect.x =  0; pointer_rect.y =  0;
   pointer_rect.w = 16; pointer_rect.h = 16;
 
   trans_buffer = create_surface(WIN_VW, WIN_VH);
-  trans_position.x = 0;
-  trans_position.y = 0;
-  trans_position.w = WIN_VW;
-  trans_position.h = WIN_VH;
   
   next_scene = scn_new_game;
 }
@@ -203,7 +198,7 @@ void game_state_step(void){
   if(controller_just_pressed(BTN_U)){ selected_option_index -= 1; if(selected_option_index<0){selected_option_index=MAX_OPT_INDEX;}}
   if(controller_just_pressed(BTN_D)){ selected_option_index += 1; if(selected_option_index>MAX_OPT_INDEX){selected_option_index=0;}}
   
-  SDL_BlitSurface(background_image, &bg_src_rect, SCREEN_SURFACE, &bg_dst_rect);
+  SDL_BlitSurface(background_image, NULL, SCREEN_SURFACE, NULL);
 
   current_game_step += 1;
 
@@ -211,14 +206,14 @@ void game_state_step(void){
   double y=16;
 
   y += font_wrap_string(font_header, current_title, x, y, TITLE_WRAP_W, SCREEN_SURFACE);
-
+  y += 8;
   y += font_wrap_string(font_normal, current_prose, x, y, PROSE_WRAP_W, SCREEN_SURFACE);
 
   x -= pointer_rect.w/2; 
   pointer_rect.x = x;
   x = pointer_rect.x + pointer_rect.w + 2;
 
-  y += 16;
+  y += 8;
 
   for(int i=0; i < MAX_OPT_COUNT; i++){
     option_t *opt = &current_options[i];
@@ -276,7 +271,7 @@ void scn_forest_four(void);
 void scn_new_game(void){
   reset_scene();
   sprintf(current_title, "%s", "New Game");
-  sprintf(current_prose, "%s", "This is the default new game landing prose.");
+  sprintf(current_prose, "%s", "This is the default new game landing prose. It needs to be long enough to wrap so I can evaluate font sizes.");
   set_option(0,scn_forest_one,"Go to The Forest 001");
   next_scene = NULL;
 }
@@ -304,7 +299,7 @@ void scn_forest_three(void){
   background_image = get_image("bg_forest_wilderness.png");
   sprintf(current_title, "%s", "The Forest 003");
   sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 003.");
-  set_option(5,scn_new_game,"Return to New Game");
+  set_option(2,scn_new_game,"Return to New Game");
   next_scene = NULL;
 }
 
