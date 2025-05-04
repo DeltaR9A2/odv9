@@ -25,14 +25,7 @@
 #define VIRTUAL_SCREEN_W 640
 #define VIRTUAL_SCREEN_H 360
 
-#define TITLE_WRAP_W 520
-#define PROSE_WRAP_W 360
-#define OPTION_WRAP_W 520
-
-double clamp(double d, double min, double max) {
-  const double t = d < min ? min : d;
-  return t > max ? max : t;
-}
+#define PROSE_WRAP_W 260
 
 static bool RUNNING = true;
 static SDL_Window *WINDOW;
@@ -119,6 +112,8 @@ char current_title[MAX_TITLE_LENGTH];
 char current_prose[MAX_TITLE_LENGTH];
 
 typedef void (*scene_t)(void);
+static scene_t prev_scene; 
+static scene_t this_scene; 
 static scene_t next_scene; 
 
 typedef struct{
@@ -139,11 +134,7 @@ static font_t *font_normal;
 
 static SDL_Surface *background_blank;
 static SDL_Surface *background_image;
-static SDL_Rect bg_dst_rect;
-static SDL_Rect bg_src_rect;
-
 static SDL_Surface *pointer_image;
-static SDL_Rect pointer_rect;
 
 static SDL_Surface *trans_buffer;
 static SDL_Rect trans_position;
@@ -167,21 +158,27 @@ void game_state_init(void){
   font_normal = font_create("font_mnemonika_16_normal.png");
 
   background_image = background_blank = get_image("art_blank.png");
-
-  pointer_image = get_image("cursor_arrow.png");
-  pointer_rect.x =  0; pointer_rect.y =  0;
-  pointer_rect.w = 16; pointer_rect.h = 16;
+  pointer_image = get_image("cursor_arrow_small.png");
 
   trans_buffer = create_surface(WIN_VW, WIN_VH);
   
+  prev_scene = NULL;
+  next_scene = NULL;
   next_scene = scn_new_game;
 }
 
 void game_state_step(void){
   if( next_scene != NULL ){ 
+    prev_scene = this_scene;
+    this_scene = next_scene;
+    next_scene = NULL;
+    
     SDL_BlitSurface(SCREEN_SURFACE, NULL, trans_buffer, NULL);
     trans_alpha = 255;
-    next_scene(); 
+    
+    this_scene();
+    
+    return;
   } 
   
   // Check for manual game exit.
@@ -202,44 +199,39 @@ void game_state_step(void){
 
   current_game_step += 1;
 
-  double x=16;
-  double y=16;
-
-  y += font_wrap_string(font_header, current_title, x, y, TITLE_WRAP_W, SCREEN_SURFACE);
-  y += 8;
-  y += font_wrap_string(font_normal, current_prose, x, y, PROSE_WRAP_W, SCREEN_SURFACE);
-
-  x -= pointer_rect.w/2; 
-  pointer_rect.x = x;
-  x = pointer_rect.x + pointer_rect.w + 2;
-
-  y += 8;
+  font_draw_string(font_header, current_title, 16, 16, SCREEN_SURFACE);
+  
+  font_wrap_string(font_normal, current_prose, 16, 42, PROSE_WRAP_W, SCREEN_SURFACE);
 
   for(int i=0; i < MAX_OPT_COUNT; i++){
     option_t *opt = &current_options[i];
-    
-    if(i == selected_option_index ){
-      pointer_rect.y = y-1;
-      if(opt->target == NULL){
-        y += font_wrap_string(font_dimmed, opt->label, x, y, OPTION_WRAP_W, SCREEN_SURFACE);
-      }else{
-        y += font_wrap_string(font_golden, opt->label, x, y, OPTION_WRAP_W, SCREEN_SURFACE);
-        if(controller_just_pressed(BTN_START)){
-          next_scene = current_options[selected_option_index].target;
-          selected_option_index = 0;
-        }
-      }
-    }else{
-      if(opt->target == NULL){
-        y += font_wrap_string(font_dimmed, opt->label, x, y, OPTION_WRAP_W, SCREEN_SURFACE);
-      }else{
-        y += font_wrap_string(font_normal, opt->label, x, y, OPTION_WRAP_W, SCREEN_SURFACE);
-      }
+
+    int y = 250+(i*font_get_height(font_normal));
+
+    if( 
+        opt->target != NULL && 
+        i == selected_option_index && 
+        controller_just_pressed(BTN_START) 
+    ){        
+      next_scene = current_options[selected_option_index].target;
+      selected_option_index = 0;
+      break;
     }
-    y += 2;
+
+    font_t *selected_font = font_normal;
+
+    if(i == selected_option_index ){ 
+      selected_font = font_golden;
+      SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &(struct SDL_Rect){8,y-1,0,0});
+    }
+    
+    if(opt->target == NULL){ 
+      selected_font = font_dimmed; 
+    }
+    
+    font_draw_string(selected_font, opt->label, 24, y, SCREEN_SURFACE);
   }
 
-  SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &pointer_rect);
 
   if(trans_alpha > 0){
     SDL_SetSurfaceAlphaMod(trans_buffer, trans_alpha);
@@ -254,26 +246,30 @@ void reset_scene(void){
   sprintf(current_prose, "%s", "... ... ...");
   for(int i=0; i<MAX_OPT_COUNT; i++){
     current_options[i].target = NULL;
-    sprintf(current_options[i].label, "%i) %s", i, "...");
+    sprintf(current_options[i].label, "%i) %s", i+1, "...");
   }
 }
 
 void set_option(int index, scene_t target, const char *label){
-  sprintf(current_options[index].label, "%i) %s", index, label);
+  sprintf(current_options[index].label, "%i) %s", index+1, label);
   current_options[index].target = target;
 }
+
+static int PLAYER_HAS_STICK = 0;
 
 void scn_forest_one(void);
 void scn_forest_two(void);
 void scn_forest_three(void);
 void scn_forest_four(void);
+void act_pick_up_stick(void);
+void act_put_down_stick(void);
 
 void scn_new_game(void){
   reset_scene();
+  background_image = get_image("sn_pixel_frame_background.png");
   sprintf(current_title, "%s", "New Game");
-  sprintf(current_prose, "%s", "This is the default new game landing prose. It needs to be long enough to wrap so I can evaluate font sizes.");
+  sprintf(current_prose, "%s", "This is the default new game landing prose. It needs to be long enough to wrap so I can evaluate font sizes. Like really quite long and including longer words like calibration or justification.");
   set_option(0,scn_forest_one,"Go to The Forest 001");
-  next_scene = NULL;
 }
 
 void scn_forest_one(void){
@@ -282,7 +278,12 @@ void scn_forest_one(void){
   sprintf(current_title, "%s", "The Forest 001");
   sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 001.");
   set_option(1,scn_forest_two,"Go to The Forest 002");
-  next_scene = NULL;
+  if(!PLAYER_HAS_STICK){
+    set_option(2,act_pick_up_stick,"Pick up a stick.");
+  }else{
+    set_option(2,act_put_down_stick,"Put down the stick.");
+  }
+  set_option(5,scn_new_game,"Return to New Game");
 }
 
 void scn_forest_two(void){
@@ -291,15 +292,24 @@ void scn_forest_two(void){
   sprintf(current_title, "%s", "The Forest 002");
   sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 002.");
   set_option(2,scn_forest_three,"Go to The Forest 003");
-  next_scene = NULL;
+  set_option(5,scn_new_game,"Return to New Game");
 }
 
 void scn_forest_three(void){
+  static int times_visited = 0;
+  times_visited += 1;
   reset_scene();
   background_image = get_image("bg_forest_wilderness.png");
   sprintf(current_title, "%s", "The Forest 003");
-  sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 003.");
-  set_option(2,scn_new_game,"Return to New Game");
-  next_scene = NULL;
+  sprintf(current_prose, "You have been here %i times. You %s carrying a stick.", times_visited, PLAYER_HAS_STICK?"are":"are not");
+  set_option(5,scn_new_game,"Return to New Game");
 }
 
+void act_pick_up_stick(void){
+  PLAYER_HAS_STICK = 1;
+  next_scene = prev_scene;
+}
+void act_put_down_stick(void){
+  PLAYER_HAS_STICK = 0;
+  next_scene = prev_scene;
+}
