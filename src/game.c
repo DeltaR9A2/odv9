@@ -131,7 +131,7 @@ void game_state_init(void){
   font_console = font_create("font_nokia_10.png", 0x33FF33FF, 0x113311FF);
 
   background_image = background_blank = get_image("art_blank.png");
-  pointer_image = get_image("cursor_arrow_small.png");
+  pointer_image = get_image("cursor_arrow.png");
 
   trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
   
