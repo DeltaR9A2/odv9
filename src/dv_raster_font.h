@@ -14,7 +14,7 @@ typedef struct {
   uint32_t tail_kerns[GLYPH_ARRAY_SIZE];
 } font_t;
 
-font_t *font_create(const char *image_fn);
+font_t *font_create(const char *image_fn, uint32_t fg_color, uint32_t bg_color);
 void font_delete(font_t *font);
 
 int32_t font_get_height(font_t *font);

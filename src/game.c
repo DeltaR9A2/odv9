@@ -19,13 +19,13 @@
 #include "dv_image_cache.h"
 #include "dv_raster_font.h"
 
-#define INITIAL_WINDOW_W 1280
+#define INITIAL_WINDOW_W 960
 #define INITIAL_WINDOW_H 720
 
-#define VIRTUAL_SCREEN_W 640
-#define VIRTUAL_SCREEN_H 360
+#define VIRTUAL_SCREEN_W 320
+#define VIRTUAL_SCREEN_H 240
 
-#define PROSE_WRAP_W 320
+#define PROSE_WRAP_W 300
 
 static bool RUNNING = true;
 static SDL_Window *WINDOW;
@@ -33,28 +33,16 @@ static SDL_Renderer *REND;
 static SDL_Surface *SCREEN_SURFACE;
 static SDL_Texture *SCREEN_TEXTURE;
 
-static double WIN_VW = VIRTUAL_SCREEN_W, WIN_VH = VIRTUAL_SCREEN_H;
-static double WIN_CW = INITIAL_WINDOW_W, WIN_CH = INITIAL_WINDOW_H;
-static SDL_Rect ACTIVE_RECT = {0, 0, 0, 0};
-
-void recalculate_screen_scale_and_position(void){
-  double h_scale = ((double)WIN_CW / (double)WIN_VW);
-  double v_scale = ((double)WIN_CH / (double)WIN_VH);
-  double scale = (h_scale < v_scale) ? h_scale : v_scale;
-  ACTIVE_RECT.w = (int)(scale * WIN_VW);
-  ACTIVE_RECT.h = (int)(scale * WIN_VH);
-  ACTIVE_RECT.x = (WIN_CW - ACTIVE_RECT.w)/2;
-  ACTIVE_RECT.y = (WIN_CH - ACTIVE_RECT.h)/2;
+int32_t main_event_watch(void *data, SDL_Event *e){
+  if(e->type == SDL_QUIT){ RUNNING = SDL_FALSE; }
+  return 0;
 }
 
-int32_t main_event_watch(void *data, SDL_Event *e){
-  if(e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_RESIZED){
-    WIN_CW = e->window.data1; WIN_CH = e->window.data2;
-    recalculate_screen_scale_and_position();
-  }else if(e->type == SDL_QUIT){
-    RUNNING = SDL_FALSE;
-  }
-  return 0;
+void game_draw_screen(void){
+  SDL_UpdateTexture(SCREEN_TEXTURE, NULL, SCREEN_SURFACE->pixels, SCREEN_SURFACE->pitch);
+  SDL_RenderClear(REND);
+  SDL_RenderCopy(REND, SCREEN_TEXTURE, NULL, NULL);
+  SDL_RenderPresent(REND);
 }
 
 void game_state_init(void);
@@ -65,20 +53,16 @@ int32_t main(void){
 
   RUNNING = true;
 
-  WINDOW = SDL_CreateWindow("game",
-              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-              WIN_CW, WIN_CH, SDL_WINDOW_RESIZABLE);
+  WINDOW = SDL_CreateWindow("game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, INITIAL_WINDOW_W, INITIAL_WINDOW_H, 0);
   if(WINDOW == NULL){ printf("%s\n", SDL_GetError()); fflush(stdout); exit(1); }
 
   REND = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-  SCREEN_SURFACE = create_surface(WIN_VW, WIN_VH);
-  SCREEN_TEXTURE = SDL_CreateTexture(REND, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, WIN_VW, WIN_VH);
+  SCREEN_SURFACE = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
+  SCREEN_TEXTURE = SDL_CreateTexture(REND, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
 
   controller_init();
   game_state_init();
-
-  recalculate_screen_scale_and_position();
 
   SDL_AddEventWatch(&main_event_watch, 0);
   double cms = 0, pms = 0, msd = 0, msa = 0, mspf = 10;
@@ -87,11 +71,7 @@ int32_t main(void){
     if(msa > mspf){ msa -= mspf;
       controller_read();
       game_state_step();
-
-      SDL_UpdateTexture(SCREEN_TEXTURE, NULL, SCREEN_SURFACE->pixels, SCREEN_SURFACE->pitch);
-      SDL_RenderClear(REND);
-      SDL_RenderCopy(REND, SCREEN_TEXTURE, NULL, &ACTIVE_RECT);
-      SDL_RenderPresent(REND);
+      game_draw_screen();
     }
     fflush(stdout);
   }
@@ -106,7 +86,6 @@ int32_t main(void){
 #define MAX_OPT_COUNT 6
 #define MAX_OPT_INDEX 5
 #define MAX_OPT_LABEL_LENGTH 128
-
 
 char current_title[MAX_TITLE_LENGTH];
 char current_prose[MAX_PROSE_LENGTH];
@@ -124,13 +103,10 @@ typedef struct{
 static option_t current_options[MAX_OPT_COUNT];
 
 static font_t *font_header;
-static font_t *font_bright;
 static font_t *font_dimmed;
-static font_t *font_grayed;
-static font_t *font_nogood;
-static font_t *font_golden;
-static font_t *font_invert;
+static font_t *font_active;
 static font_t *font_normal;
+static font_t *font_console;
 
 static SDL_Surface *background_blank;
 static SDL_Surface *background_image;
@@ -147,20 +123,17 @@ static int selected_option_index;
 void scn_new_game(void);
 
 void game_state_init(void){
-  font_header = font_create("font_alkhemikal_16_golden.png");
-
-  font_bright = font_create("font_mnemonika_16_bright.png");
-  font_dimmed = font_create("font_mnemonika_16_dimmed.png");
-  font_grayed = font_create("font_mnemonika_16_grayed.png");
-  font_nogood = font_create("font_mnemonika_16_nogood.png");
-  font_golden = font_create("font_mnemonika_16_golden.png");
-  font_invert = font_create("font_mnemonika_16_invert.png");
-  font_normal = font_create("font_mnemonika_16_normal.png");
+  font_header = font_create("font_alkhemikal_15.png", 0xEECC33FF, 0x443322FF);
+  font_dimmed = font_create("font_mnemonika_12.png",  0x666666FF, 0x333333FF);
+  font_active = font_create("font_mnemonika_12.png",  0xEECC33FF, 0x443322FF);
+  font_normal = font_create("font_mnemonika_12.png",  0xDDDDDDFF, 0x333333FF);
+  
+  font_console = font_create("font_nokia_10.png", 0x33FF33FF, 0x113311FF);
 
   background_image = background_blank = get_image("art_blank.png");
   pointer_image = get_image("cursor_arrow_small.png");
 
-  trans_buffer = create_surface(WIN_VW, WIN_VH);
+  trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
   
   prev_scene = NULL;
   next_scene = NULL;
@@ -191,14 +164,14 @@ void game_state_step(void){
 
   current_game_step += 1;
 
-  font_draw_string(font_header, current_title, 16, 16, SCREEN_SURFACE);
+  font_draw_string(font_header, current_title, 8, 8, SCREEN_SURFACE);
   
-  font_wrap_string(font_normal, current_prose, 16, 42, PROSE_WRAP_W, SCREEN_SURFACE);
+  font_wrap_string(font_normal, current_prose, 8, 32, PROSE_WRAP_W, SCREEN_SURFACE);
 
   for(int i=0; i < MAX_OPT_COUNT; i++){
     option_t *opt = &current_options[i];
 
-    int y = 250+(i*font_get_height(font_normal));
+    int y = 160+(i*font_get_height(font_normal));
 
     if( 
         opt->target != NULL && 
@@ -213,7 +186,7 @@ void game_state_step(void){
     font_t *selected_font = font_normal;
 
     if(i == selected_option_index ){ 
-      selected_font = font_golden;
+      selected_font = font_active;
       SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &(struct SDL_Rect){8,y-1,0,0});
     }
     

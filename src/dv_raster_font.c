@@ -4,13 +4,19 @@
 
 const char *glyph_order = " 1234567890-=`!@#$%^&*()_+~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]\\;',./{}|:\"<>?";
 
-font_t *font_create(const char *image_fn){
+font_t *font_create(const char *image_fn, uint32_t fg_color, uint32_t bg_color){
   font_t *font = malloc(sizeof(font_t));
   memset(font, 0, sizeof(font_t));
 
-  SDL_Surface *font_img = get_image(image_fn);
-
+  SDL_Surface *load_img = get_image(image_fn);
+  SDL_Surface *font_img = create_surface(load_img->w,load_img->h);
+  SDL_BlitSurface(load_img,NULL,font_img,NULL);
   uint32_t *pixels = font_img->pixels;
+
+  for(int i=0; i<(font_img->w*font_img->h); i+=1) { 
+    if(pixels[i] == 0xFFFFFFFF){ pixels[i] = fg_color; } 
+    if(pixels[i] == 0x000000FF){ pixels[i] = bg_color; } 
+  }
 
   int32_t this_mark = 0;
   int32_t prev_mark = 0;
