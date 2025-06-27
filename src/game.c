@@ -25,7 +25,7 @@
 #define VIRTUAL_SCREEN_W 640
 #define VIRTUAL_SCREEN_H 360
 
-#define PROSE_WRAP_W 260
+#define PROSE_WRAP_W 320
 
 static bool RUNNING = true;
 static SDL_Window *WINDOW;
@@ -38,8 +38,8 @@ static double WIN_CW = INITIAL_WINDOW_W, WIN_CH = INITIAL_WINDOW_H;
 static SDL_Rect ACTIVE_RECT = {0, 0, 0, 0};
 
 void recalculate_screen_scale_and_position(void){
-  double h_scale = (int)((double)WIN_CW / (double)WIN_VW);
-  double v_scale = (int)((double)WIN_CH / (double)WIN_VH);
+  double h_scale = ((double)WIN_CW / (double)WIN_VW);
+  double v_scale = ((double)WIN_CH / (double)WIN_VH);
   double scale = (h_scale < v_scale) ? h_scale : v_scale;
   ACTIVE_RECT.w = (int)(scale * WIN_VW);
   ACTIVE_RECT.h = (int)(scale * WIN_VH);
@@ -109,7 +109,7 @@ int32_t main(void){
 
 
 char current_title[MAX_TITLE_LENGTH];
-char current_prose[MAX_TITLE_LENGTH];
+char current_prose[MAX_PROSE_LENGTH];
 
 typedef void (*scene_t)(void);
 static scene_t prev_scene; 
@@ -183,14 +183,6 @@ void game_state_step(void){
   
   // Check for manual game exit.
   if(controller_just_pressed(BTN_BACK)){ RUNNING = SDL_FALSE; }
-
-  // Check for activate fullscreen mode.
-  if(controller_just_pressed(BTN_RB)){
-    SDL_SetWindowFullscreen(WINDOW, SDL_WINDOW_FULLSCREEN_DESKTOP); }
-  // Check for disable fullscreen mode.
-  if(controller_just_pressed(BTN_LB)){
-    SDL_SetWindowFullscreen(WINDOW, SDL_FALSE);
-    SDL_SetWindowSize(WINDOW, WIN_VW*2, WIN_VH*2); }
   // Check for option selection
   if(controller_just_pressed(BTN_U)){ selected_option_index -= 1; if(selected_option_index<0){selected_option_index=MAX_OPT_INDEX;}}
   if(controller_just_pressed(BTN_D)){ selected_option_index += 1; if(selected_option_index>MAX_OPT_INDEX){selected_option_index=0;}}
@@ -255,61 +247,139 @@ void set_option(int index, scene_t target, const char *label){
   current_options[index].target = target;
 }
 
-static int PLAYER_HAS_STICK = 0;
+void scn_outpost_stairwell(void);
 
-void scn_forest_one(void);
-void scn_forest_two(void);
-void scn_forest_three(void);
-void scn_forest_four(void);
-void act_pick_up_stick(void);
-void act_put_down_stick(void);
+void scn_outpost_basement_hub(void);
+void scn_outpost_basement_cryo(void);
+void scn_outpost_basement_storage(void);
+void scn_outpost_basement_reactor(void);
+
+void scn_outpost_ground_floor_hub(void);
+void scn_outpost_ground_floor_lounge(void);
+void scn_outpost_ground_floor_quarters(void);
+void scn_outpost_ground_floor_garage(void);
+
+void scn_outpost_upper_floor_hub(void);
+void scn_outpost_upper_floor_command(void);
+void scn_outpost_upper_floor_compcore(void);
+void scn_outpost_upper_floor_surveillance(void);
 
 void scn_new_game(void){
   reset_scene();
-  background_image = get_image("sn_pixel_frame_background.png");
   sprintf(current_title, "%s", "New Game");
   sprintf(current_prose, "%s", "This is the default new game landing prose. It needs to be long enough to wrap so I can evaluate font sizes. Like really quite long and including longer words like calibration or justification.");
-  set_option(0,scn_forest_one,"Go to The Forest 001");
+  set_option(0,scn_outpost_basement_cryo,"Go to Cryostasis Bay");
 }
 
-void scn_forest_one(void){
+void scn_outpost_stairwell(void){
   reset_scene();
-  background_image = get_image("bg_forest.png");
-  sprintf(current_title, "%s", "The Forest 001");
-  sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 001.");
-  set_option(1,scn_forest_two,"Go to The Forest 002");
-  if(!PLAYER_HAS_STICK){
-    set_option(2,act_pick_up_stick,"Pick up a stick.");
-  }else{
-    set_option(2,act_put_down_stick,"Put down the stick.");
-  }
-  set_option(5,scn_new_game,"Return to New Game");
+  background_image = get_image("sn_bg_outpost_stairwell.png");
+  sprintf(current_title, "%s", "Outpost Stairwell");
+  set_option(0,scn_outpost_basement_hub,"Outpost Basement");
+  set_option(1,scn_outpost_ground_floor_hub,"Outpost Main Floor");
+  set_option(2,scn_outpost_upper_floor_hub,"Outpost Upper Floor");
 }
 
-void scn_forest_two(void){
+void scn_outpost_basement_hub(void){
   reset_scene();
-  background_image = get_image("bg_forest_wandering.png");
-  sprintf(current_title, "%s", "The Forest 002");
-  sprintf(current_prose, "%s", "This is the placeholder prose for The Forest 002.");
-  set_option(2,scn_forest_three,"Go to The Forest 003");
-  set_option(5,scn_new_game,"Return to New Game");
+  background_image = get_image("sn_bg_outpost_basement_hub.png");
+  sprintf(current_title, "%s", "Outpost Basement");
+
+  set_option(0,scn_outpost_basement_cryo,"Cryostasis Bay");
+  set_option(1,scn_outpost_basement_storage,"Storage Room");
+  set_option(2,scn_outpost_basement_reactor,"Reactor Room");
+  set_option(5,scn_outpost_stairwell,"Stairwell");
 }
 
-void scn_forest_three(void){
-  static int times_visited = 0;
-  times_visited += 1;
+void scn_outpost_basement_cryo(void){
   reset_scene();
-  background_image = get_image("bg_forest_wilderness.png");
-  sprintf(current_title, "%s", "The Forest 003");
-  sprintf(current_prose, "You have been here %i times. You %s carrying a stick.", times_visited, PLAYER_HAS_STICK?"are":"are not");
-  set_option(5,scn_new_game,"Return to New Game");
+  background_image = get_image("sn_bg_outpost_basement_cryo.png");
+  sprintf(current_title, "%s", "Cryostasis Chamber");
+  sprintf(current_prose, "%s", "A single stasis pod dominates the room, "
+                               "its glass fogged with condensation. "
+                               "Dim lights flicker overhead, casting deep shadows. " 
+                               "The machinery hums quietly, and frost clings to every surface."
+                               "\n  \nAn amber warning light pulses near the pod's control panel." 
+                               "\n  \nA hand-written note is taped to wall beside the door." );
+  set_option(0,NULL,"Check the control panel.");
+  set_option(1,NULL,"Read the hand-written note.");
+  set_option(5,scn_outpost_basement_hub,"Exit the room.");
 }
 
-void act_pick_up_stick(void){
-  PLAYER_HAS_STICK = 1;
-  next_scene = prev_scene;
+void scn_outpost_basement_storage(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_basement_storage.png");
+  sprintf(current_title, "%s", "Storage Room");
+  set_option(5,scn_outpost_basement_hub,"Exit the room.");
 }
-void act_put_down_stick(void){
-  PLAYER_HAS_STICK = 0;
-  next_scene = prev_scene;
+  
+void scn_outpost_basement_reactor(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_basement_reactor.png");
+  sprintf(current_title, "%s", "Reactor Room");
+  set_option(5,scn_outpost_basement_hub,"Exit the room.");
+}
+
+void scn_outpost_ground_floor_hub(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_ground_floor_hub.png");
+  sprintf(current_title, "%s", "Outpost Main Floor");
+
+  set_option(0,scn_outpost_ground_floor_lounge,"Lounge");
+  set_option(1,scn_outpost_ground_floor_garage,"Garage");
+  set_option(2,scn_outpost_ground_floor_quarters,"Living Quarters");
+  set_option(5,scn_outpost_stairwell,"Stairwell");
+}
+
+void scn_outpost_ground_floor_lounge(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_ground_floor_lounge.png");
+  sprintf(current_title, "%s", "Lounge");
+  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
+}
+  
+void scn_outpost_ground_floor_garage(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_ground_floor_garage.png");
+  sprintf(current_title, "%s", "Garage");
+  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
+}
+
+void scn_outpost_ground_floor_quarters(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_ground_floor_quarters.png");
+  sprintf(current_title, "%s", "Quarters");
+  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
+}
+
+void scn_outpost_upper_floor_hub(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_upper_floor_hub.png");
+  sprintf(current_title, "%s", "Outpost Upper Floor");
+
+  set_option(0,scn_outpost_upper_floor_command,"Command Center");
+  set_option(1,scn_outpost_upper_floor_compcore,"Computer Core");
+  set_option(2,scn_outpost_upper_floor_surveillance,"Surveillance");
+  set_option(5,scn_outpost_stairwell,"Stairwell");
+}
+
+void scn_outpost_upper_floor_command(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_upper_floor_command.png");
+  sprintf(current_title, "%s", "Command Center");
+  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
+}
+
+void scn_outpost_upper_floor_compcore(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_upper_floor_compcore.png");
+  sprintf(current_title, "%s", "Computer Core");
+  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
+}
+
+void scn_outpost_upper_floor_surveillance(void){
+  reset_scene();
+  background_image = get_image("sn_bg_outpost_upper_floor_surveillance.png");
+  sprintf(current_title, "%s", "Surveillance Suite");
+  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
 }
