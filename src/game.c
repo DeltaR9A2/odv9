@@ -130,7 +130,7 @@ void game_state_init(void){
   
   font_console = font_create("font_nokia_10.png", 0x33FF33FF, 0x113311FF);
 
-  background_image = background_blank = get_image("art_blank.png");
+  background_image = background_blank = get_image("bg_blank.png");
   pointer_image = get_image("cursor_arrow.png");
 
   trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
@@ -266,8 +266,8 @@ void scn_outpost_basement_hub(void){
 
 void scn_outpost_basement_cryo(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_basement_cryo.png");
-  sprintf(current_title, "%s", "Cryostasis Chamber");
+  background_image = get_image("bg-dr9-cryo-vault.png");
+  sprintf(current_title, "%s", "Cryostasis Vault");
   sprintf(current_prose, "%s", "A single stasis pod dominates the room, "
                                "its glass fogged with condensation. "
                                "Dim lights flicker overhead, casting deep shadows. " 
