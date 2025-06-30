@@ -557,7 +557,7 @@ void game_state_init(void){
   
   font_console = font_create("font_nokia_10.png", 0x33FF33FF, 0x113311FF);
 
-  background_image = background_blank = get_image("bg_blank.png");
+  background_image = background_blank = get_image("bg-blank.png");
   pointer_image = get_image("cursor_arrow.png");
 
   trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
@@ -665,7 +665,6 @@ void scn_new_game(void){
 
 void scn_outpost_stairwell(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_stairwell.png");
   sprintf(current_title, "%s", "Outpost Stairwell");
   set_option(0,scn_outpost_basement_hub,"Outpost Basement");
   set_option(1,scn_outpost_ground_floor_hub,"Outpost Main Floor");
@@ -674,9 +673,7 @@ void scn_outpost_stairwell(void){
 
 void scn_outpost_basement_hub(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_basement_hub.png");
   sprintf(current_title, "%s", "Outpost Basement");
-
   set_option(0,scn_outpost_basement_cryo,"Cryostasis Bay");
   set_option(1,scn_outpost_basement_storage,"Storage Room");
   set_option(2,scn_outpost_basement_reactor,"Reactor Room");
@@ -685,7 +682,7 @@ void scn_outpost_basement_hub(void){
 
 void scn_outpost_basement_cryo(void){
   reset_scene();
-  background_image = get_image("bg-dr9-cryo-vault.png");
+  background_image = get_image("bg-dv9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryostasis Vault");
   sprintf(current_prose, "%s", "A single stasis pod dominates the room, "
                                "its glass fogged with condensation. Dim "
@@ -700,7 +697,7 @@ void scn_outpost_basement_cryo(void){
 
 void rbn_cryo_control_panel(void){
   reset_scene();
-  background_image = get_image("bg-dr9-cryo-vault.png");
+  background_image = get_image("bg-dv9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryo Pod Control Panel");
   sprintf(current_prose, "%s", "The control panel's diagnostics read nominal "
                                "across the board. All systems are functioning and "
@@ -713,7 +710,7 @@ void rbn_cryo_control_panel(void){
 
 void rbn_cryo_vault_note(void){
   reset_scene();
-  background_image = get_image("bg-dr9-cryo-vault.png");
+  background_image = get_image("bg-dv9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryo Vault Note");
   sprintf(current_prose, "%s", "A hand-written note is taped to the wall beside "
                                "the door. The paper is old and weathered. It reads: "
@@ -736,16 +733,13 @@ void scn_outpost_basement_storage(void){
   
 void scn_outpost_basement_reactor(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_basement_reactor.png");
   sprintf(current_title, "%s", "Reactor Room");
   set_option(5,scn_outpost_basement_hub,"Exit the room.");
 }
 
 void scn_outpost_ground_floor_hub(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_ground_floor_hub.png");
   sprintf(current_title, "%s", "Outpost Main Floor");
-
   set_option(0,scn_outpost_ground_floor_lounge,"Lounge");
   set_option(1,scn_outpost_ground_floor_garage,"Garage");
   set_option(2,scn_outpost_ground_floor_quarters,"Living Quarters");
@@ -754,21 +748,18 @@ void scn_outpost_ground_floor_hub(void){
 
 void scn_outpost_ground_floor_lounge(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_ground_floor_lounge.png");
   sprintf(current_title, "%s", "Lounge");
   set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
 }
   
 void scn_outpost_ground_floor_garage(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_ground_floor_garage.png");
   sprintf(current_title, "%s", "Garage");
   set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
 }
 
 void scn_outpost_ground_floor_quarters(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_ground_floor_quarters.png");
   sprintf(current_title, "%s", "Crew Quarters");
   sprintf(current_prose, "%s", "DEV put cryo drugs here ");
   set_option(4,NULL,"(look at the cryo drugs)");
@@ -777,9 +768,7 @@ void scn_outpost_ground_floor_quarters(void){
 
 void scn_outpost_upper_floor_hub(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_upper_floor_hub.png");
   sprintf(current_title, "%s", "Outpost Upper Floor");
-
   set_option(0,scn_outpost_upper_floor_command,"Command Center");
   set_option(1,scn_outpost_upper_floor_compcore,"Computer Core");
   set_option(2,scn_outpost_upper_floor_surveillance,"Surveillance");
@@ -788,21 +777,18 @@ void scn_outpost_upper_floor_hub(void){
 
 void scn_outpost_upper_floor_command(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_upper_floor_command.png");
   sprintf(current_title, "%s", "Command Center");
   set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
 }
 
 void scn_outpost_upper_floor_compcore(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_upper_floor_compcore.png");
   sprintf(current_title, "%s", "Computer Core");
   set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
 }
 
 void scn_outpost_upper_floor_surveillance(void){
   reset_scene();
-  background_image = get_image("sn_bg_outpost_upper_floor_surveillance.png");
   sprintf(current_title, "%s", "Surveillance Suite");
   set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
 }
