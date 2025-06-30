@@ -25,8 +25,6 @@
 #define VIRTUAL_SCREEN_W 320
 #define VIRTUAL_SCREEN_H 240
 
-#define PROSE_WRAP_W 300
-
 static bool RUNNING = true;
 static SDL_Window *WINDOW;
 static SDL_Renderer *REND;
@@ -136,7 +134,6 @@ void game_state_init(void){
   trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
   
   prev_scene = NULL;
-  next_scene = NULL;
   next_scene = scn_new_game;
 }
 
@@ -164,14 +161,14 @@ void game_state_step(void){
 
   current_game_step += 1;
 
-  font_draw_string(font_header, current_title, 8, 8, SCREEN_SURFACE);
+  font_draw_string(font_header, current_title, 10, 8, SCREEN_SURFACE);
   
-  font_wrap_string(font_normal, current_prose, 8, 32, PROSE_WRAP_W, SCREEN_SURFACE);
+  font_wrap_string(font_normal, current_prose, 10, 32, 290, SCREEN_SURFACE);
 
   for(int i=0; i < MAX_OPT_COUNT; i++){
     option_t *opt = &current_options[i];
 
-    int y = 160+(i*font_get_height(font_normal));
+    int y = 164+(i*font_get_height(font_normal));
 
     if( 
         opt->target != NULL && 
@@ -187,14 +184,14 @@ void game_state_step(void){
 
     if(i == selected_option_index ){ 
       selected_font = font_active;
-      SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &(struct SDL_Rect){8,y-1,0,0});
+      SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &(struct SDL_Rect){4,y+2,0,0});
     }
     
     if(opt->target == NULL){ 
       selected_font = font_dimmed; 
     }
     
-    font_draw_string(selected_font, opt->label, 24, y, SCREEN_SURFACE);
+    font_draw_string(selected_font, opt->label, 14, y, SCREEN_SURFACE);
   }
 
 
@@ -237,6 +234,9 @@ void scn_outpost_upper_floor_command(void);
 void scn_outpost_upper_floor_compcore(void);
 void scn_outpost_upper_floor_surveillance(void);
 
+void rbn_cryo_control_panel(void);
+void rbn_cryo_vault_note(void);
+
 void scn_new_game(void){
   reset_scene();
   sprintf(current_title, "%s", "New Game");
@@ -269,14 +269,43 @@ void scn_outpost_basement_cryo(void){
   background_image = get_image("bg-dr9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryostasis Vault");
   sprintf(current_prose, "%s", "A single stasis pod dominates the room, "
-                               "its glass fogged with condensation. "
-                               "Dim lights flicker overhead, casting deep shadows. " 
+                               "its glass fogged with condensation. Dim "
+                               "lights flicker overhead, casting deep shadows. "
                                "The machinery hums quietly, and frost clings to every surface."
-                               "\n  \nAn amber warning light pulses near the pod's control panel." 
-                               "\n  \nA hand-written note is taped to wall beside the door." );
-  set_option(0,NULL,"Check the control panel.");
-  set_option(1,NULL,"Read the hand-written note.");
+                               "\n\nA warning light pulses on a control panel."
+                               "\n\nA hand-written note is taped to the door." );
+  set_option(0,rbn_cryo_control_panel,"Check the control panel.");
+  set_option(1,rbn_cryo_vault_note,"Read the hand-written note.");
   set_option(5,scn_outpost_basement_hub,"Exit the room.");
+}
+
+void rbn_cryo_control_panel(void){
+  reset_scene();
+  background_image = get_image("bg-dr9-cryo-vault.png");
+  sprintf(current_title, "%s", "Cryo Pod Control Panel");
+  sprintf(current_prose, "%s", "The control panel's diagnostics read nominal "
+                               "across the board. All systems are functioning and "
+                               "the most recent stasis cycle encountered no errors. " 
+                               "A single warning light pulses next to a switch "
+                               "marked 'MAINTENANCE OVERRIDE'. The switch is badly "
+                               "damaged, leaving it in the 'ON' position permanently. " );
+  set_option(0,prev_scene,"Return.");
+}
+
+void rbn_cryo_vault_note(void){
+  reset_scene();
+  background_image = get_image("bg-dr9-cryo-vault.png");
+  sprintf(current_title, "%s", "Cryo Vault Note");
+  sprintf(current_prose, "%s", "A hand-written note is taped to the wall beside "
+                               "the door. The paper is old and weathered. It reads: "
+                               "\n  \n  " 
+                               "I won't remember writing this. The drugs are already "
+                               "working. I n-YOU- need to leave. They'll know I'm "
+                               "awake as soon as I'm out of the pod. It could take "
+                               "hours or days or weeks but they WILL find me. Get to "
+                               "the -/-///-/- observatory. It will still be "
+                               "there. It has to be." );
+  set_option(0,prev_scene,"Return.");
 }
 
 void scn_outpost_basement_storage(void){
@@ -321,7 +350,9 @@ void scn_outpost_ground_floor_garage(void){
 void scn_outpost_ground_floor_quarters(void){
   reset_scene();
   background_image = get_image("sn_bg_outpost_ground_floor_quarters.png");
-  sprintf(current_title, "%s", "Quarters");
+  sprintf(current_title, "%s", "Crew Quarters");
+  sprintf(current_prose, "%s", "DEV put cryo drugs here ");
+  set_option(4,NULL,"(look at the cryo drugs)");
   set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
 }
 
