@@ -557,7 +557,7 @@ void game_state_init(void){
   
   font_console = font_create("font_nokia_10.png", 0x33FF33FF, 0x113311FF);
 
-  background_image = background_blank = get_image("bg-dv9-default.png");
+  background_image = background_blank = get_image("bg-blank.png");
   pointer_image = get_image("cursor_arrow.png");
 
   trans_buffer = create_surface(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H);
@@ -622,7 +622,7 @@ void game_state_step(void){
 }
 
 void reset_scene(void){
-  background_image = background_blank;
+  background_image = get_image("bg-dv9-default.png");
   sprintf(current_title, "%s", "??? ??? ???");
   sprintf(current_prose, "%s", "... ... ...");
   for(int i=0; i<MAX_OPT_COUNT; i++){
