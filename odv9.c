@@ -16,8 +16,6 @@
 #define STBI_ONLY_PNG
 #include "stb_image.h"
 
-#include "dv_raster_font.h"
-
 #define INITIAL_WINDOW_W 960
 #define INITIAL_WINDOW_H 720
 
