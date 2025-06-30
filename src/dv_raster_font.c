@@ -161,16 +161,14 @@ int32_t font_wrap_string(font_t *font, const char *string, int32_t x, int32_t y,
 
   int32_t total_height = 0;
 
-  while(line_end < strlen(string)){
+  while(line_end <= strlen(string)){
     wrap_now = false;
-    line_end += 1;
     strncpy(temp, &(string[line_start]), line_end-line_start);
     temp[line_end-line_start] = '\0';
 
     if(string[line_end] == '\n'){
       wrap_now = true;
     }else if(font_get_width(font, temp) > w){
-      line_end -= 1;
       int32_t temp_end = line_end;
       while(string[line_end] != ' '){
         line_end -= 1;
@@ -186,11 +184,15 @@ int32_t font_wrap_string(font_t *font, const char *string, int32_t x, int32_t y,
 
     if(wrap_now){
       font_draw_partial_string(font, &(string[line_start]), line_end-line_start, x, y, target);
-      line_start = line_end + 1;
+      line_start = line_end;
+      if(string[line_start] == ' '){ line_start += 1; }
       line_end = line_start + 1;
       y += h;
       total_height += h;
+    }else{
+      line_end += 1;
     }
+    
 
   }
   return total_height;
