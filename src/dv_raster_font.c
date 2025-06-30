@@ -152,7 +152,7 @@ int32_t font_get_height(font_t *font){
 }
 
 int32_t font_wrap_string(font_t *font, const char *string, int32_t x, int32_t y, int32_t w, SDL_Surface *target){
-  if(string == NULL){ printf("Bad string.\n"); return 0; }
+  if(string == NULL){ return 0; }
   char temp[STRING_BUFFER_SIZE];
   int32_t h = font_get_height(font);
   int32_t line_start = 0;
@@ -192,8 +192,6 @@ int32_t font_wrap_string(font_t *font, const char *string, int32_t x, int32_t y,
     }else{
       line_end += 1;
     }
-    
-
   }
   return total_height;
 }
