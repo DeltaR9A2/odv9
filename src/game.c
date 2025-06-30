@@ -142,10 +142,11 @@ void game_state_step(void){
     prev_scene = this_scene;
     this_scene = next_scene;
     next_scene = NULL;
+
+    selected_option_index = 0;
     
     SDL_BlitSurface(SCREEN_SURFACE, NULL, trans_buffer, NULL);
     trans_alpha = 255;
-    
     this_scene();
     
     return;
@@ -156,7 +157,8 @@ void game_state_step(void){
   // Check for option selection
   if(controller_just_pressed(BTN_U)){ selected_option_index -= 1; if(selected_option_index<0){selected_option_index=MAX_OPT_INDEX;}}
   if(controller_just_pressed(BTN_D)){ selected_option_index += 1; if(selected_option_index>MAX_OPT_INDEX){selected_option_index=0;}}
-  
+  if(controller_just_pressed(BTN_START)){ next_scene = current_options[selected_option_index].target; selected_option_index = 0; }
+
   SDL_BlitSurface(background_image, NULL, SCREEN_SURFACE, NULL);
 
   current_game_step += 1;
@@ -170,30 +172,18 @@ void game_state_step(void){
 
     int y = 164+(i*font_get_height(font_normal));
 
-    if( 
-        opt->target != NULL && 
-        i == selected_option_index && 
-        controller_just_pressed(BTN_START) 
-    ){        
-      next_scene = current_options[selected_option_index].target;
-      selected_option_index = 0;
-      break;
+    if(opt->target == NULL){ 
+      font_draw_string(font_dimmed, opt->label, 14, y, SCREEN_SURFACE);
+    }else if(i != selected_option_index ){
+      font_draw_string(font_normal, opt->label, 14, y, SCREEN_SURFACE);
+    }else{
+      font_draw_string(font_active, opt->label, 14, y, SCREEN_SURFACE);
     }
-
-    font_t *selected_font = font_normal;
-
-    if(i == selected_option_index ){ 
-      selected_font = font_active;
+    
+    if(i == selected_option_index){
       SDL_BlitSurface(pointer_image, NULL, SCREEN_SURFACE, &(struct SDL_Rect){4,y+2,0,0});
     }
-    
-    if(opt->target == NULL){ 
-      selected_font = font_dimmed; 
-    }
-    
-    font_draw_string(selected_font, opt->label, 14, y, SCREEN_SURFACE);
   }
-
 
   if(trans_alpha > 0){
     SDL_SetSurfaceAlphaMod(trans_buffer, trans_alpha);
