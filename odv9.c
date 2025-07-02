@@ -636,66 +636,226 @@ void set_option(int index, scene_t target, const char *label){
   current_options[index].target = target;
 }
 
-void scn_outpost_stairwell(void);
+void scn_odv9_S1(void);
 
-void scn_outpost_basement_hub(void);
-void scn_outpost_basement_cryo(void);
-void scn_outpost_basement_storage(void);
-void scn_outpost_basement_reactor(void);
+void scn_odv9_B1(void);   // Basement Passage
+void scn_odv9_B1_A(void); // Storage
+void scn_odv9_B1_B(void); // Reactor
+void scn_odv9_B1_C(void); // Cryo Vault
 
-void scn_outpost_ground_floor_hub(void);
-void scn_outpost_ground_floor_lounge(void);
-void scn_outpost_ground_floor_quarters(void);
-void scn_outpost_ground_floor_garage(void);
+void scn_odv9_F1(void);   // Ground Floor Passage
+void scn_odv9_F1_A(void); // Common Room
+void scn_odv9_F1_B(void); // Crew Quarters
+void scn_odv9_F1_C(void); // Maintenance Bay
 
-void scn_outpost_upper_floor_hub(void);
-void scn_outpost_upper_floor_command(void);
-void scn_outpost_upper_floor_compcore(void);
-void scn_outpost_upper_floor_surveillance(void);
+void scn_odv9_F2(void);   // Command Deck Passage
+void scn_odv9_F2_A(void); // Command Center
+void scn_odv9_F2_B(void); // Computer Core
+void scn_odv9_F2_C(void); // Surveillance Suite
 
-void rbn_cryo_control_panel(void);
-void rbn_cryo_vault_note(void);
+void info_odv9_B1_C_control_panel(void);
+void info_odv9_B1_C_door_note(void);
+
+static int PLAYER_HAS_TORCH = 0;
+void event_odv9_pickup_torch(void){ PLAYER_HAS_TORCH = 1; next_scene = prev_scene; }
+
+static int PLAYER_HAS_KEYCARD = 0;
+void event_odv9_pickup_keycard(void){ PLAYER_HAS_KEYCARD = 1; next_scene = prev_scene; }
+
+static int PLAYER_HAS_PRYBAR = 0;
+void event_odv9_pickup_prybar(void){ PLAYER_HAS_PRYBAR = 1; next_scene = prev_scene; }
+
+static int ODV9_B1_TO_S1_CUT = 0;
+void event_odv9_cut_B1_to_S1(void){ ODV9_B1_TO_S1_CUT = 1; next_scene = prev_scene; }
+
+static int ODV9_S1_TO_F2_UNLOCK = 0;
+void event_odv9_s1_to_f2_unlock(void){ ODV9_S1_TO_F2_UNLOCK = 1; next_scene = prev_scene; }
+
+void item_odv9_keycard(void);
+void item_odv9_cutting_torch(void);
 
 void scn_new_game(void){
   reset_scene();
   sprintf(current_title, "%s", "New Game");
   sprintf(current_prose, "%s", "This is the default new game landing prose. It needs to be long enough to wrap so I can evaluate font sizes. Like really quite long and including longer words like calibration or justification.");
-  set_option(0,scn_outpost_basement_cryo,"Go to Cryostasis Bay");
+  set_option(0,scn_odv9_B1_C,"Go to Cryostasis Bay");
 }
 
-void scn_outpost_stairwell(void){
+void scn_odv9_S1(void){
   reset_scene();
-  sprintf(current_title, "%s", "Outpost Stairwell");
-  set_option(0,scn_outpost_basement_hub,"Outpost Basement");
-  set_option(1,scn_outpost_ground_floor_hub,"Outpost Main Floor");
-  set_option(2,scn_outpost_upper_floor_hub,"Outpost Upper Floor");
+  sprintf(current_title, "%s", "ODV9-S1: Stairwell");
+  sprintf(current_prose, "%s\n\n%s", "This stairwell connects all three floors. ",
+                                     ODV9_S1_TO_F2_UNLOCK ? "The door to the Command Deck is unlocked." 
+                                                          : "The door to the Command Deck is locked.");
+  set_option(0,scn_odv9_B1,"B1: Basement");
+  set_option(1,scn_odv9_F1,"F1: Ground Floor");
+  set_option(2,ODV9_S1_TO_F2_UNLOCK ? scn_odv9_F2 : NULL,"F2: Command Deck");
+  if(PLAYER_HAS_KEYCARD && !ODV9_S1_TO_F2_UNLOCK){ set_option(3,event_odv9_s1_to_f2_unlock,"Use the ID Badge to unlock the Command Deck"); }
 }
 
-void scn_outpost_basement_hub(void){
+void scn_odv9_B1(void){
   reset_scene();
-  sprintf(current_title, "%s", "Outpost Basement");
-  set_option(0,scn_outpost_basement_cryo,"Cryostasis Bay");
-  set_option(1,scn_outpost_basement_storage,"Storage Room");
-  set_option(2,scn_outpost_basement_reactor,"Reactor Room");
-  set_option(5,scn_outpost_stairwell,"Stairwell");
+  sprintf(current_title, "%s", "ODV9-B1: Basement");
+  sprintf(current_prose, "%s\n\n%s", "Cramped concrete tunnels connect the rooms "
+                               "of the basement. Pipes and conduits run along "
+                               "the ceiling. There are doors labeled 'STORAGE', "
+                               "'REACTOR', and 'STAIRWELL'. The door to the Cryo "
+                               "Vault is unmarked.",
+                               ODV9_B1_TO_S1_CUT ? "The door to the stairwell has been cut open." 
+                                                 : "The door to the stairwell is welded shut." );
+  set_option(0,scn_odv9_B1_A,"B1-A: Storage Room");
+  set_option(1,scn_odv9_B1_B,"B1-B: Reactor Room");
+  set_option(2,scn_odv9_B1_C,"B1-C: Cryostasis Bay");
+  if(PLAYER_HAS_TORCH && !ODV9_B1_TO_S1_CUT){
+    set_option(3,event_odv9_cut_B1_to_S1,"Use the Welding Torch on the Stairwell Door");
+  }
+  set_option(5,ODV9_B1_TO_S1_CUT ? scn_odv9_S1 : NULL,"ODV9-S1: Stairwell");
 }
 
-void scn_outpost_basement_cryo(void){
+void scn_odv9_B1_A(void){
+  reset_scene();
+  sprintf(current_title, "%s", "B1-A: Storage Room");
+  sprintf(current_prose, "%s", "Placeholder description." );
+  set_option(5,scn_odv9_B1,"Exit the room.");
+}
+
+void scn_odv9_B1_B(void){
+  reset_scene();
+  sprintf(current_title, "%s", "B1-B: Reactor Room");
+  sprintf(current_prose, "%s\n%s", "The room is dominated by a compact fusion"
+                               "reactor. It is cold and silent. A backup"
+                               "RTG power source shows full function."
+                               "There are racks of tools along one wall,"
+                               "everything needed to maintain the facility.",
+                               PLAYER_HAS_TORCH ? "" : "A powerful cutting torch rests on the edge"
+                               "of a workbench.");
+  if(!PLAYER_HAS_TORCH){ set_option(1,item_odv9_cutting_torch,"Examine the Cutting Torch."); }
+  set_option(5,scn_odv9_B1,"Exit the room.");
+}
+
+void item_odv9_cutting_torch(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Cutting Torch");
+  sprintf(current_prose, "%s", "This industrial cutting torch shoots an"
+                               "adjustable stream of ionized gas that can"
+                               "cut through metal up to three inches thick."
+                               "It could also be used to melt metal along"
+                               "a seam to form a crude weld if a proper"
+                               "welding tool is not available.");
+  if(!PLAYER_HAS_TORCH){ set_option(1,event_odv9_pickup_torch,"Take the Cutting Torch"); }
+  set_option(5,scn_odv9_B1_B,"Return.");
+}
+
+void scn_odv9_B1_C(void){
   reset_scene();
   background_image = get_image("bg-dv9-cryo-vault.png");
-  sprintf(current_title, "%s", "Cryostasis Vault");
+  sprintf(current_title, "%s", "B1-C: Cryostasis Vault");
   sprintf(current_prose, "%s", "A single stasis pod dominates the room, "
                                "its glass fogged with condensation. Dim "
                                "lights flicker overhead, casting deep shadows. "
                                "The machinery hums quietly, and frost clings to every surface."
                                "\n\nA warning light pulses on a control panel."
                                "\n\nA hand-written note is taped to the door." );
-  set_option(0,rbn_cryo_control_panel,"Check the control panel.");
-  set_option(1,rbn_cryo_vault_note,"Read the hand-written note.");
-  set_option(5,scn_outpost_basement_hub,"Exit the room.");
+  set_option(0,info_odv9_B1_C_control_panel,"Check the control panel.");
+  set_option(1,info_odv9_B1_C_door_note,"Read the hand-written note.");
+  set_option(5,scn_odv9_B1,"Exit the room.");
 }
 
-void rbn_cryo_control_panel(void){
+void scn_odv9_F1(void){
+  reset_scene();
+  sprintf(current_title, "%s", "ODV9-F1: Ground Floor");
+  sprintf(current_prose, "%s\n\n%s", "The well travelled halls of the ground "
+                               "floor are cold and silent. There are"
+                               "doorways leading to the Common Room,"
+                               "the Crew Quarters, the Maintenance Bay,"
+                               "and the Stairwell.",
+                               "The door to the Maintenance Bay is stuck,"
+                               "thick ice around the edges locking it in"
+                               "place." );
+  set_option(0,scn_odv9_F1_A,"F1-A: Common Room");
+  set_option(1,scn_odv9_F1_B,"F1-B: Crew Quarters");
+  set_option(2,NULL,"F1-C: Maintenance Bay");
+  //set_option(2,scn_odv9_F1_C,"F1-C: Maintenance Bay");
+  set_option(5,scn_odv9_S1,"Stairwell");
+}
+
+void scn_odv9_F1_A(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Common Room");
+  sprintf(current_prose, "%s", "Placeholder description.");
+  set_option(5,scn_odv9_F1,"Exit the room.");
+}
+  
+void scn_odv9_F1_B(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Crew Quarters");
+  sprintf(current_prose, "%s\n\n%s", "Compact but well appointed, these quarters "
+                               "provide enough space for up to six personnel. "
+                               "The lockers are full of clothing and "
+                               "personal items of the crew. The space is tidy "
+                               "but feels lived-in. ",
+                               PLAYER_HAS_KEYCARD ? "" : "There is an ID badge "
+                               "with a broken lanyard lying on the floor." );
+  set_option(0,NULL,"Search the lockers");
+  set_option(1,NULL,"Search the beds");
+  if(PLAYER_HAS_KEYCARD){ /* */}
+  else{set_option(3,event_odv9_pickup_keycard,"Pick up the ID badge.");}
+  set_option(4,NULL,"A bottle of medication.");
+  set_option(5,scn_odv9_F1,"Exit the room.");
+}
+
+void scn_odv9_F1_C(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Garage");
+  sprintf(current_prose, "%s", "Placeholder description.");
+  set_option(5,scn_odv9_F1,"Exit the room.");
+}
+
+void scn_odv9_F2(void){
+  reset_scene();
+  sprintf(current_title, "%s", "ODV9-F2: Command Deck");
+  sprintf(current_prose, "%s", "These halls are cleaner than the rest of"
+                               "the outpost, as if rarely used."
+                               ""
+                               ""
+                               ""
+                               ""
+                               );
+  set_option(0,scn_odv9_F2_A,"Command Center");
+  set_option(1,scn_odv9_F2_B,"Computer Core");
+  set_option(2,scn_odv9_F2_C,"Surveillance");
+  set_option(5,scn_odv9_S1,"Stairwell");
+}
+
+void scn_odv9_F2_A(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Command Center");
+  sprintf(current_prose, "%s\n\n%s", "Huge windows show a breathtaking view of snow-covered mountain peaks. "
+                               "The consoles and control panels are all dark, apparently unpowered. "
+                               "One console stands out; it has been severely damaged, its casing dented and screen cracked.",
+                               PLAYER_HAS_PRYBAR ? ""
+                                                 : "A long steel prybar is sticking out of the broken console."
+                               "");
+  if(PLAYER_HAS_PRYBAR){ }
+  else{set_option(4,event_odv9_pickup_prybar,"Pick up the prybar.");}
+  set_option(5,scn_odv9_F2,"Exit the room.");
+}
+
+void scn_odv9_F2_B(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Computer Core");
+  sprintf(current_prose, "%s", "Placeholder description.");
+  set_option(5,scn_odv9_F2,"Exit the room.");
+}
+
+void scn_odv9_F2_C(void){
+  reset_scene();
+  sprintf(current_title, "%s", "Surveillance Suite");
+  sprintf(current_prose, "%s", "Placeholder description.");
+  set_option(5,scn_odv9_F2,"Exit the room.");
+}
+
+void info_odv9_B1_C_control_panel(void){
   reset_scene();
   background_image = get_image("bg-dv9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryo Pod Control Panel");
@@ -708,7 +868,7 @@ void rbn_cryo_control_panel(void){
   set_option(0,prev_scene,"Return.");
 }
 
-void rbn_cryo_vault_note(void){
+void info_odv9_B1_C_door_note(void){
   reset_scene();
   background_image = get_image("bg-dv9-cryo-vault.png");
   sprintf(current_title, "%s", "Cryo Vault Note");
@@ -724,71 +884,3 @@ void rbn_cryo_vault_note(void){
   set_option(0,prev_scene,"Return.");
 }
 
-void scn_outpost_basement_storage(void){
-  reset_scene();
-  background_image = get_image("sn_bg_outpost_basement_storage.png");
-  sprintf(current_title, "%s", "Storage Room");
-  set_option(5,scn_outpost_basement_hub,"Exit the room.");
-}
-  
-void scn_outpost_basement_reactor(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Reactor Room");
-  set_option(5,scn_outpost_basement_hub,"Exit the room.");
-}
-
-void scn_outpost_ground_floor_hub(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Outpost Main Floor");
-  set_option(0,scn_outpost_ground_floor_lounge,"Lounge");
-  set_option(1,scn_outpost_ground_floor_garage,"Garage");
-  set_option(2,scn_outpost_ground_floor_quarters,"Living Quarters");
-  set_option(5,scn_outpost_stairwell,"Stairwell");
-}
-
-void scn_outpost_ground_floor_lounge(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Lounge");
-  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
-}
-  
-void scn_outpost_ground_floor_garage(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Garage");
-  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
-}
-
-void scn_outpost_ground_floor_quarters(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Crew Quarters");
-  sprintf(current_prose, "%s", "DEV put cryo drugs here ");
-  set_option(4,NULL,"(look at the cryo drugs)");
-  set_option(5,scn_outpost_ground_floor_hub,"Exit the room.");
-}
-
-void scn_outpost_upper_floor_hub(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Outpost Upper Floor");
-  set_option(0,scn_outpost_upper_floor_command,"Command Center");
-  set_option(1,scn_outpost_upper_floor_compcore,"Computer Core");
-  set_option(2,scn_outpost_upper_floor_surveillance,"Surveillance");
-  set_option(5,scn_outpost_stairwell,"Stairwell");
-}
-
-void scn_outpost_upper_floor_command(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Command Center");
-  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
-}
-
-void scn_outpost_upper_floor_compcore(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Computer Core");
-  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
-}
-
-void scn_outpost_upper_floor_surveillance(void){
-  reset_scene();
-  sprintf(current_title, "%s", "Surveillance Suite");
-  set_option(5,scn_outpost_upper_floor_hub,"Exit the room.");
-}
