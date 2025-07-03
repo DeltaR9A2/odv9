@@ -66,49 +66,6 @@ typedef struct scene_t{
   int8_t  cursor_pos;  // Index of the option the player's cursor is on
 } scene_t;
 
-///////////////// NODE TO SCENE CONVERSION /////////////////
-
-void scene_from_node(scene_t *s, node_t *n){
-  snprintf(s->super, sizeof(s->super), "%s", n->idstr);
-  snprintf(s->title, sizeof(s->title), "%s", n->title);
-  snprintf(s->prose, sizeof(s->prose), "%s", n->prose);
-
-  for(int i=0; i < 5; i++){
-    if(n->children[i] != NULL){
-      snprintf(s->options[i].label, sizeof(s->options[i].label), "%i) %s", i+1, n->children[i]->asopt);
-      s->options[i].target = n->children[i];
-    }else{
-      snprintf(s->options[i].label, sizeof(s->options[i].label), "%i) %s", i+1, "...");
-      s->options[i].target = NULL;
-    }
-  }
-  
-  if(n->parent != NULL){
-    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, n->parent->asopt);
-    s->options[5].target = n->parent;
-  }else{
-    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "...");
-    s->options[5].target = NULL;
-  }
-  
-  s->cursor_pos = 0;
-
-  if(n->type == NODE_HALL){
-    s->bgimg = get_image(n->bgimg);
-  }if(n->type == NODE_ROOM){
-    s->bgimg = get_image(n->bgimg);
-    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Exit this room.");
-  }else if(n->type == NODE_PROP){
-    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Return.");
-    s->cursor_pos = 5;
-  }else if(n->type == NODE_ITEM){
-    snprintf(s->title,  128, "%s", "ERROR: Scene From Item");
-    snprintf(s->prose, 1024, "%s", "An item node has been passed to the scene_from_node function but items cannot be viewed as scenes.");
-    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Return.");
-    s->cursor_pos = 5;
-  }
-}
-
 ////////////////////// THE WORLD TREE //////////////////////
 
 static node_t test_hall;
@@ -173,7 +130,67 @@ static node_t torn_paper = {
 
 struct {
   node_t *cur_node;
+  struct { char *key; int value; } *items;
+  struct { char *key; int value; } *flags;
 } player;
+
+void player_add_item(const char *item_name){        shput(player.items, item_name, 1); }
+void player_del_item(const char *item_name){        shput(player.items, item_name, 0); }
+int  player_has_item(const char *item_name){ return shget(player.items, item_name); }
+
+void player_add_flag(const char *flag_name){        shput(player.flags, flag_name, 1); }
+void player_del_flag(const char *flag_name){        shput(player.flags, flag_name, 0); }
+int  player_has_flag(const char *flag_name){ return shget(player.flags, flag_name); }
+
+///////////////// NODE TO SCENE CONVERSION /////////////////
+
+void scene_from_node(scene_t *s, node_t *n){
+  snprintf(s->super, sizeof(s->super), "%s", n->idstr);
+  snprintf(s->title, sizeof(s->title), "%s", n->title);
+  snprintf(s->prose, sizeof(s->prose), "%s", n->prose);
+
+  for(int i=0; i < 5; i++){
+    node_t *child = n->children[i];
+    option_t *opt = &s->options[i];
+    if( (child != NULL) && (
+          (child->type == NODE_HALL) ||
+          (child->type == NODE_ROOM) ||
+          (child->type == NODE_PROP) ||
+          (child->type == NODE_ITEM && !player_has_item(child->idstr)) ) )
+    {
+      snprintf(opt->label, sizeof(opt->label), "%i) %s", i+1, child->asopt);
+      opt->target = child;
+    }else{
+      snprintf(opt->label, sizeof(opt->label), "%i) %s", i+1, "...");
+      opt->target = NULL;
+    }
+  }
+
+  if(n->parent != NULL){
+    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, n->parent->asopt);
+    s->options[5].target = n->parent;
+  }else{
+    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "...");
+    s->options[5].target = NULL;
+  }
+
+  s->cursor_pos = 0;
+
+  if(n->type == NODE_HALL){
+    s->bgimg = get_image(n->bgimg);
+  }if(n->type == NODE_ROOM){
+    s->bgimg = get_image(n->bgimg);
+    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Exit this room.");
+  }else if(n->type == NODE_PROP){
+    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Return.");
+    s->cursor_pos = 5;
+  }else if(n->type == NODE_ITEM){
+    snprintf(s->title,  128, "%s", "ERROR: Scene From Item");
+    snprintf(s->prose, 1024, "%s", "An item node has been passed to the scene_from_node function but items cannot be viewed as scenes.");
+    snprintf(s->options[5].label, sizeof(s->options[5].label), "%i) %s", 6, "Return.");
+    s->cursor_pos = 5;
+  }
+}
 
 ////////////////////// THE MAIN LOOP ///////////////////////
 
@@ -233,10 +250,15 @@ int32_t main(void){
       }
       
       if(next_node != NULL && next_node != player.cur_node){
+        if(next_node->type == NODE_ITEM){
+          player_add_item(next_node->idstr);
+        }else{
+          player.cur_node = next_node;
+        }
+        next_node = NULL;
+        scene_from_node(&current_scene,player.cur_node);
         SDL_BlitSurface(SCREEN_SURFACE, NULL, trans_buffer, NULL);
         trans_alpha = 255;
-        player.cur_node = next_node; next_node = NULL;
-        scene_from_node(&current_scene,player.cur_node);
       }
 
       SDL_BlitSurface(current_scene.bgimg, NULL, SCREEN_SURFACE, NULL);
