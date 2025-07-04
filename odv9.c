@@ -49,6 +49,10 @@ typedef struct node_t {
   char bgimg[128];  // image file to display in a scene view (like 'storage-room.png')
   // char audio[128];  // audio file to loop in a scene view (like 'storage-room.mp3')
 
+  char *revealed_by; // If set, node is hidden until this flag is true. Never hidden otherwise.
+  char *unlocked_by; // If set, node is locked until this flag is true. Never locked otherwise.
+  char *disabled_by; // If set, node is disabled when this flag is true. Always enabled otherwise.
+
 } node_t;
 
 typedef struct option_t{
@@ -68,79 +72,270 @@ typedef struct scene_t{
 
 ////////////////////// THE WORLD TREE //////////////////////
 
-static node_t test_hall;
-static node_t test_room;
-static node_t test_item;
-static node_t test_prop;
-static node_t torn_paper;
+static struct {
+  node_t test_hall;
+  node_t test_room;
+  node_t test_item;
+  node_t test_prop;
+  node_t torn_paper;
 
-static node_t test_item = {
-  .type = NODE_ITEM,
-  .parent = &test_room,
-  .idstr = "ODV9-TEST-ITEM",
-  .label = "a test item",
-  .asopt = "Pick up the test item.",
-};
+  node_t odv9_s1;
 
-static node_t test_room = {
-  .type = NODE_ROOM,
-  .parent = &test_hall,
-  .children = {&test_item,&test_prop,&torn_paper},
-  .idstr = "ODV9-TEST-ROOM",
-  .label = "the test room",
-  .asopt = "Move to the test room.",
-  .title = "Test Room",
-  .prose = "This is the test room. It's completely unremarkable but somehow seems uniquely well suited to testing.",
-  .bgimg = "bg-dv9-cryo-vault.png",
-};
+  node_t odv9_b1;    // Basement Passage
+  node_t odv9_b1_a;  // Storage
+  node_t odv9_b1_b;  // Reactor
+  node_t odv9_b1_c;  // Cryo Vault
+  
+  node_t odv9_f1;    // Ground Floor Passage
+  node_t odv9_f1_a;  // Common Room
+  node_t odv9_f1_b;  // Crew Quarters
+  node_t odv9_f1_c;  // Maintenance Bay
 
-static node_t test_prop = {
-  .type = NODE_PROP,
-  .parent = &test_room,
-  .idstr = "ODV9-TEST-PROP",
-  .label = "a test prop",
-  .asopt = "Look at the test prop.",
-  .title = "Test Prop",
-  .prose = "This is a test prop. It's the most boring thing you've ever seen.",
-};
+  node_t odv9_f2;    // Command Deck Passage
+  node_t odv9_f2_a;  // Command Center
+  node_t odv9_f2_b;  // Computer Core
+  node_t odv9_f2_c;  // Surveillance Suite
 
-static node_t test_hall = {
-  .type = NODE_HALL,
-  .parent = NULL,
-  .children = {&test_room,},
-  .idstr = "ODV9-TEST-HALL",
-  .label = "the test hall",
-  .asopt = "Move to the test hall.",
-  .title = "Test Hall",
-  .prose = "This is the test hall. It is a strange liminal space that makes you feel uneasy.",
-  .bgimg = "bg-dv9-default.png",
-};
+  node_t odv9_b1_c_door_note;
+  node_t odv9_b1_c_pod_panel;
+} wt;
 
-static node_t torn_paper = {
-  .type = NODE_PROP,
-  .parent = &test_room,
-  .idstr = "ODV9-TORN-PAPER",
-  .label = "a torn sheet of paper",
-  .asopt = "Look at the torn paper.",
-  .title = "Torn Paper",
-  .prose = "If anybody reads this, please tell my tortoise that I love him.",
-};
+void node_add_child(node_t *n, node_t *c){
+  for(int i=0; i<6; i++){
+    if(n->children[i] == c){ return; }
+    else if(n->children[i] != NULL){ continue; }
+    else{ 
+      n->children[i] = c; 
+      c->parent = n;
+      return;
+    }
+  }
+}
 
+void populate_the_world_tree(void){
+  wt.test_item = (struct node_t){
+    .type = NODE_ITEM,
+    .idstr = "ODV9-TEST-ITEM",
+    .label = "a test item",
+    .asopt = "Pick up the test item.",
+  };
+
+  wt.test_room = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-TEST-ROOM",
+    .label = "the test room",
+    .asopt = "Move to the test room.",
+    .title = "Test Room",
+    .prose = "This is the test room. It's completely unremarkable but somehow seems uniquely well suited to testing.",
+    .bgimg = "bg-dv9-cryo-vault.png",
+  };
+
+  wt.test_prop = (struct node_t){
+    .type = NODE_PROP,
+    .idstr = "ODV9-TEST-PROP",
+    .label = "a test prop",
+    .asopt = "Look at the test prop.",
+    .title = "Test Prop",
+    .prose = "This is a test prop. It's the most boring thing you've ever seen.",
+  };
+
+  wt.test_hall = (struct node_t){
+    .type = NODE_HALL,
+    .idstr = "ODV9-TEST-HALL",
+    .label = "the test hall",
+    .asopt = "Move to the test hall.",
+    .title = "Test Hall",
+    .prose = "This is the test hall. It is a strange liminal space that makes you feel uneasy.",
+    .bgimg = "bg-dv9-default.png",
+  };
+
+  wt.torn_paper = (struct node_t){
+    .type = NODE_PROP,
+    .idstr = "ODV9-TORN-PAPER",
+    .label = "a torn sheet of paper",
+    .asopt = "Look at the torn paper.",
+    .title = "Torn Paper",
+    .prose = "If anybody reads this, please tell my tortoise that I love him.",
+  };
+  
+  node_add_child(&wt.test_room, &wt.test_prop);
+  node_add_child(&wt.test_room, &wt.test_item);
+  node_add_child(&wt.test_room, &wt.torn_paper);
+
+  node_add_child(&wt.test_hall, &wt.test_room);
+  node_add_child(&wt.test_hall, &wt.odv9_s1);
+  
+  // Stairwell
+  wt.odv9_s1 = (struct node_t){
+    .type = NODE_HALL,
+    .idstr = "ODV9-S1",
+    .label = "",
+    .asopt = "Move to the stairwell.",
+    .title = "Central Stairwell",
+    .bgimg = "bg-blank.png",
+    .unlocked_by = "ODV9-TEST-ITEM",
+  };
+
+  // Basement Passage
+  wt.odv9_b1 = (struct node_t){
+    .type = NODE_HALL,
+    .idstr = "ODV9-B1",
+    .label = "",
+    .asopt = "Move to the basement.",
+    .title = "Outpost Basement",
+    .bgimg = "bg-blank.png",
+  };
+  
+  // Ground Floor Passage
+  wt.odv9_f1 = (struct node_t){
+    .type = NODE_HALL,
+    .idstr = "ODV9-F1",
+    .label = "",
+    .asopt = "Move to the ground floor.",
+    .title = "Ground Floor",
+    .bgimg = "bg-blank.png",
+  };
+  
+  // Command Deck Passage
+  wt.odv9_f2 = (struct node_t){
+    .type = NODE_HALL,
+    .idstr = "ODV9-F2",
+    .label = "",
+    .asopt = "Move to the command deck.",
+    .title = "Command Deck",
+    .bgimg = "bg-blank.png",
+  };
+
+  node_add_child(&wt.odv9_s1, &wt.odv9_b1);
+  node_add_child(&wt.odv9_s1, &wt.odv9_f1);
+  node_add_child(&wt.odv9_s1, &wt.odv9_f2);
+
+  // Storage Room
+  wt.odv9_b1_a = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-B1-A",
+    .label = "",
+    .asopt = "Go to the storage room.",
+    .title = "Storage Room",
+  };
+  
+  // Reactor Room
+  wt.odv9_b1_b = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-B1-B",
+    .label = "",
+    .asopt = "Go to the reactor room.",
+    .title = "Reactor Room",
+  };
+  
+  // Cryo Vault
+  wt.odv9_b1_c = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-B1-C",
+    .label = "",
+    .asopt = "Go to the cryo vault.",
+    .title = "Cryo Vault",
+    .bgimg = "bg-odv9-cryo-vault.png",
+    .prose = "A single stasis pod dominates the room, its glass fogged with condensation. A warning light pulses on a control panel. A hand-written note is taped to the door.",
+  };
+  
+  node_add_child(&wt.odv9_b1, &wt.odv9_b1_a);
+  node_add_child(&wt.odv9_b1, &wt.odv9_b1_b);
+  node_add_child(&wt.odv9_b1, &wt.odv9_b1_c);
+  
+  // Common Room
+  wt.odv9_f1_a = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F1-A",
+    .label = "",
+    .asopt = "Go to the common room.",
+    .title = "Common Croom",
+  };  // Common Room
+  
+  // Crew Quarters
+  wt.odv9_f1_b = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F1-B",
+    .label = "",
+    .asopt = "Go to the crew quarters.",
+    .title = "Crew Quarters",
+  };  // Crew Quarters
+  
+  // Maintenance Bay
+  wt.odv9_f1_c = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F1-C",
+    .label = "",
+    .asopt = "Go to the maintenance bay.",
+    .title = "Maintenance Bay",
+  };  // Maintenance Bay
+
+  node_add_child(&wt.odv9_f1, &wt.odv9_f1_a);
+  node_add_child(&wt.odv9_f1, &wt.odv9_f1_b);
+  node_add_child(&wt.odv9_f1, &wt.odv9_f1_c);
+
+  // Command Center
+  wt.odv9_f2_a = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F2-A",
+    .label = "",
+    .asopt = "Go to the command center.",
+    .title = "Command Center",
+  };
+  
+  // Computer Core
+  wt.odv9_f2_b = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F2-B",
+    .label = "",
+    .asopt = "Go to the computer core.",
+    .title = "Computer Core",
+  };
+
+  // Surveillance Suite
+  wt.odv9_f2_c = (struct node_t){
+    .type = NODE_ROOM,
+    .idstr = "ODV9-F2-C",
+    .label = "",
+    .asopt = "Go to the surveillance suite.",
+    .title = "Surveillance Suite",
+  };
+
+  node_add_child(&wt.odv9_f2, &wt.odv9_f2_a);
+  node_add_child(&wt.odv9_f2, &wt.odv9_f2_b);
+  node_add_child(&wt.odv9_f2, &wt.odv9_f2_c);
+
+  wt.odv9_b1_c_door_note = (struct node_t){
+    .type = NODE_PROP,
+    .idstr = "ODV0-B1-C-DOOR-NOTE",
+    .label = "",
+    .asopt = "Read the note on the door.",
+    .title = "Hand-Written Note",
+    .prose = "A hand-written note is taped to the wall beside the door. The paper is old and weathered. It reads:\n\nI won't remember writing this. The drugs are already working. I n-YOU- need to leave. They'll know I'm awake as soon as I'm out of the pod. It could take hours or days or weeks but they WILL find me. Get to the -/-///-/- observatory. It will still be there. It has to be.",
+  };
+  
+  wt.odv9_b1_c_pod_panel = (struct node_t){
+    .type = NODE_PROP,
+    .idstr = "ODV9-B1-C-POD-PANEL",
+    .label = "",
+    .asopt = "Examine the control panel.",
+    .title = "Cryopod Control Panel",
+    .prose = "The control panel's diagnostics read nominal across the board. All systems are functioning and the most recent stasis cycle encountered no errors. A single warning light pulses next to a switch marked 'MAINTENANCE OVERRIDE'. The switch is badly damaged, leaving it in the 'ON' position permanently.",
+  };
+  node_add_child(&wt.odv9_b1_c, &wt.odv9_b1_c_pod_panel);
+  node_add_child(&wt.odv9_b1_c, &wt.odv9_b1_c_door_note);
+  
+}
 ///////////////// THE STATE OF THE PLAYER //////////////////
 
 struct {
   node_t *cur_node;
-  struct { char *key; int value; } *items;
-  struct { char *key; int value; } *flags;
+  struct { char *key; int value; } *tags;
 } player;
 
-void player_add_item(const char *item_name){        shput(player.items, item_name, 1); }
-void player_del_item(const char *item_name){        shput(player.items, item_name, 0); }
-int  player_has_item(const char *item_name){ return shget(player.items, item_name); }
-
-void player_add_flag(const char *flag_name){        shput(player.flags, flag_name, 1); }
-void player_del_flag(const char *flag_name){        shput(player.flags, flag_name, 0); }
-int  player_has_flag(const char *flag_name){ return shget(player.flags, flag_name); }
+void player_add_tag(const char *tag_name){        shput(player.tags, tag_name, 1); }
+void player_del_tag(const char *tag_name){        shput(player.tags, tag_name, 0); }
+int  player_has_tag(const char *tag_name){ return shget(player.tags, tag_name); }
 
 ///////////////// NODE TO SCENE CONVERSION /////////////////
 
@@ -150,20 +345,28 @@ void scene_from_node(scene_t *s, node_t *n){
   snprintf(s->prose, sizeof(s->prose), "%s", n->prose);
 
   for(int i=0; i < 5; i++){
-    node_t *child = n->children[i];
     option_t *opt = &s->options[i];
-    if( (child != NULL) && (
-          (child->type == NODE_HALL) ||
-          (child->type == NODE_ROOM) ||
-          (child->type == NODE_PROP) ||
-          (child->type == NODE_ITEM && !player_has_item(child->idstr)) ) )
-    {
-      snprintf(opt->label, sizeof(opt->label), "%i) %s", i+1, child->asopt);
+    snprintf(opt->label, sizeof(opt->label), "%i) %s", i+1, "...");
+    opt->target = NULL;
+  }
+
+  for(int i=0,oi=0; i < 5; i++){
+    node_t *child = n->children[i];
+    option_t *opt = &s->options[oi];
+    
+    if( (child == NULL) ||
+        (child->revealed_by != NULL && !player_has_tag(child->revealed_by)) ||
+        (child->disabled_by != NULL &&  player_has_tag(child->disabled_by)) ||
+        (child->type == NODE_ITEM   &&  player_has_tag(child->idstr)) 
+    ){ continue; }
+    
+    snprintf(opt->label, sizeof(opt->label), "%i) %s", oi+1, child->asopt);
+    
+    if( (child->unlocked_by == NULL) || player_has_tag(child->unlocked_by) ){
       opt->target = child;
-    }else{
-      snprintf(opt->label, sizeof(opt->label), "%i) %s", i+1, "...");
-      opt->target = NULL;
     }
+    
+    oi++;
   }
 
   if(n->parent != NULL){
@@ -213,16 +416,19 @@ int32_t main(void){
   font_t *font_opt_dimmed = font_create("font_mnemonika_12.png", 0x666666FF, 0x333333FF);
   font_t *font_opt_select = font_create("font_mnemonika_12.png", 0xEECC33FF, 0x332211FF);
 
+  SDL_Surface *screen_clear = get_image("bg-blank.png");
   SDL_Surface *pointer_image = get_image("cursor_arrow.png");
   SDL_Surface *trans_buffer = create_surface(320, 240);
   uint8_t trans_alpha = 0;
+  
+  populate_the_world_tree();
   
   scene_t current_scene = {
     .super = "ODV9-MAIN-MENU",
     .title = "Main Menu",
     .bgimg = get_image("bg-blank.png"),
     .prose = "The game has not yet begun.",
-    .options = { { .label = "1) New Game",  .target=&test_hall },
+    .options = { { .label = "1) New Game",  .target=NULL },
                  { .label = "2) Load Game", .target=NULL },
                  { .label = "3) Options",   .target=NULL }, 
                  { .label = "4) ...",       .target=NULL }, 
@@ -230,7 +436,7 @@ int32_t main(void){
                  { .label = "6) Exit Game", .target=NULL } },
     .cursor_pos = 0
   };
-  node_t *next_node = NULL;
+  node_t *next_node = &wt.test_hall;
   
   double cms = 0, pms = 0, msd = 0, msa = 0, mspf = 10;
   int RUNNING = 1;
@@ -251,7 +457,7 @@ int32_t main(void){
       
       if(next_node != NULL && next_node != player.cur_node){
         if(next_node->type == NODE_ITEM){
-          player_add_item(next_node->idstr);
+          player_add_tag(next_node->idstr);
         }else{
           player.cur_node = next_node;
         }
@@ -261,7 +467,11 @@ int32_t main(void){
         trans_alpha = 255;
       }
 
-      SDL_BlitSurface(current_scene.bgimg, NULL, SCREEN_SURFACE, NULL);
+      if(current_scene.bgimg != NULL){
+        SDL_BlitSurface(current_scene.bgimg, NULL, SCREEN_SURFACE, NULL);
+      }else{
+        SDL_BlitSurface(screen_clear, NULL, SCREEN_SURFACE, NULL);
+      }
 
       font_draw_string(font_super, current_scene.super, 10, 8, SCREEN_SURFACE);
       font_draw_string(font_title, current_scene.title, 10, 16, SCREEN_SURFACE);

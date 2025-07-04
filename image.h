@@ -19,7 +19,8 @@ SDL_Surface *get_image(const char *fn){
     unsigned char *data = stbi_load(fn, &w, &h, &of, 4);
 
     if(data == NULL){
-        printf("ERROR: Image failed to load: %s\n", fn); fflush(stdout);
+        //printf("ERROR: Image failed to load: %s\n", fn); fflush(stdout);
+        return NULL;
     }
 
     SDL_Surface *tmp = SDL_CreateRGBSurfaceFrom((void*)data, w, h, 32, 4*w,0x000000FF,0x0000FF00,0x00FF0000,0xFF000000);
