@@ -70,12 +70,15 @@
   X(LOCK_S1_TO_F2_CARDLOCK)    \
   X(FLAG_S1_TO_F2_UNLOCKED)    \
   /* Sealed Crate in Storage */\
-  X(ODV9_PRYBAR)               \
-  X(ODV9_PRY_OPEN_CRATE)       \
+  X(CASE_F2_A_CONSOLE)         \
+  X(ITEM_F2_A_PRYBAR)          \
+  X(LOCK_B1_A_CRATE_SEALED)    \
+  X(FLAG_B1_A_CRATE_UNSEALED)  \
   /* Maint Bay Too Cold */     \
-  X(ODV9_MCP_SUIT)             \
+  X(CASE_B1_A_CRATE)           \
+  X(ITEM_B1_A_SUIT)            \
   X(ODV9_BAY_TOO_COLD)         \
-  X(ODV9_FUEL_CELL)            \
+  X(ITEM_F1_C_FUEL_CELL)            \
   X(ODV9_REFUEL_REACTOR)       \
   X(ODV9_REACTOR_CODES)        \
   X(ODV9_RESTART_REACTOR)      \
@@ -217,13 +220,17 @@ void populate_the_world_tree(void){
   node_link(TEST_HALL, 0, 0, 0, 0);
   
   node_select( TEST_HALL );
-  node_init("test halld", NT_HALL);
-  node_desc("Test Hall", "", "This is the test hall. It is a strange liminal space that makes you feel uneasy.");
+  node_init("test hall", NT_HALL);
+  node_desc("Test Hall", "", 
+            "This is the test hall. It is a strange liminal space "
+            "that makes you feel uneasy.");
   node_link(TEST_ROOM, 0, 0, 0, ODV9_B1_C);
 
   node_select( TEST_ROOM );
   node_init("test room", NT_ROOM);
-  node_desc("Test Room", "", "This is the test room. It's completely unremarkable but somehow seems uniquely well suited to testing.");
+  node_desc("Test Room", "", 
+            "This is the test room. It's completely unremarkable "
+            "but somehow seems uniquely well suited to testing.");
   node_link(TEST_ITEM, TEST_PROP, TORN_PAPER, 0, 0 );
   
   node_select( TEST_ITEM );
@@ -231,11 +238,14 @@ void populate_the_world_tree(void){
 
   node_select( TEST_PROP );
   node_init("test prop", NT_PROP);
-  node_desc("Test Prop", "", "This is a test prop. It's the most boring thing you've ever seen.");
+  node_desc("Test Prop", "", 
+            "This is a test prop. It's the most boring thing you've "
+            "ever seen.");
 
   node_select( TORN_PAPER );
   node_init("torn paper", NT_PROP);
-  node_desc("Torn Paper", "", "If anybody reads this, please tell my tortoise that I love him.");
+  node_desc("Torn Paper", "", 
+            "If anybody reads this, please tell my tortoise that I love him.");
 
   ////////////////////////// REAL GAME CONTENT ///////////////////////
   // Cryo Vault
@@ -259,7 +269,7 @@ void populate_the_world_tree(void){
             "doors have spray-painted stencil lettering; 'STORAGE', "
             "'REACTOR', and 'CRYO'. A fourth door with an 'EXIT' sign "
             "shows visible scorching along the seams.");
-  node_link(ODV9_B1_A, ODV9_B1_B, ODV9_B1_C, 0, ODV9_B1_TO_S1_DOOR );
+  node_link(ODV9_B1_A, ODV9_B1_B, ODV9_B1_C, 0, LOCK_B1_TO_S1_WELDED );
   
   // Storage Room
   node_select( ODV9_B1_A );
@@ -268,7 +278,7 @@ void populate_the_world_tree(void){
             "This crowded storage room is lined with floor-to-ceiling "
             "racks full of boxes and crates. Decades worth of supplies "
             "and replacement parts. There must be something useful in all this.");
-  node_link(ODV9_PRY_OPEN_CRATE,ODV9_MCP_SUIT,0,0,0);
+  node_link(LOCK_B1_A_CRATE_SEALED,ITEM_B1_A_SUIT,0,0,0);
   
   // Reactor Room
   node_select( ODV9_B1_B );
@@ -278,12 +288,11 @@ void populate_the_world_tree(void){
             "It looks nearly pristine, but requires specialized fuel cells "
             "to operate. The other half of the room has a long workbench "
             "covered in a mess of tools and parts.");
-  node_link(ODV9_CUTTING_TORCH, ODV9_REFUEL_REACTOR, ODV9_RESTART_REACTOR, 0, 0);
+  node_link(ITEM_B1_B_CUTTING_TORCH, ODV9_REFUEL_REACTOR, ODV9_RESTART_REACTOR, 0, 0);
 
-  X(CASE_B1_B_TOOL_BOX)        \
-  X(ITEM_B1_B_CUTTING_TORCH)   \
-  X(LOCK_B1_TO_S1_WELDED)      \
-  X(FLAG_B1_TO_S1_IS_CUT)      \
+  //X(CASE_B1_B_TOOL_BOX)  
+
+  
   
   // Door between basement and stairwell. Welded, needs to be cut open.
   node_select( LOCK_B1_TO_S1_WELDED );
@@ -297,10 +306,10 @@ void populate_the_world_tree(void){
   node_link(FLAG_B1_TO_S1_IS_CUT, 0, 0, 0, 0);
   
   // Option to cut basement->stairwell door, visible on the door prop.
-  node_select( ODV9_CUT_STAIRWELL_DOOR );
+  node_select( FLAG_B1_TO_S1_IS_CUT );
   node_init("welded door", NT_FLAG);
   node_custom_asopt("Cut the weld.");
-  node_unlocked_by(ODV9_CUTTING_TORCH);
+  node_unlocked_by(ITEM_B1_B_CUTTING_TORCH);
 
   // The stairwell. This is actually the parent of all three floors. It would
   // appear locked from all floors, but the player starts in the basement.
@@ -312,7 +321,7 @@ void populate_the_world_tree(void){
             "door says 'ACCESS RESTRICTED' and has an electronic lock "
             "with card reader. The middle door is unlocked and has an "
             "'EXIT' sign above it.");
-  node_revealed_by( ODV9_CUT_STAIRWELL_DOOR );
+  node_revealed_by( FLAG_B1_TO_S1_IS_CUT );
   node_link(ODV9_B1, ODV9_F1, ODV9_F2, 0, 0 );
 
   // Ground Floor Passage
@@ -332,7 +341,7 @@ void populate_the_world_tree(void){
             "as if rarely used. There is an 'EXIT' sign above the stairwell "
             "door, and three other doors are marked 'COMMAND', 'COMPCORE', "
             "and 'MONITOR'.");
-  node_unlocked_by(ODV9_ID_CARD);
+  node_unlocked_by(ITEM_F1_B_ID_CARD);
   node_link(ODV9_F2_A, ODV9_F2_B, ODV9_F2_C, 0, 0);
 
   // Common Room
@@ -351,13 +360,13 @@ void populate_the_world_tree(void){
             "outpost. It has six recessed cubicles; each has its own bed "
             "and locker, with a curtain for privacy. There is a tiny "
             "bathroom at the far end, barely larger than a closet.");
-  node_link(ODV9_ID_CARD,0,0,0,0);
+  node_link(ITEM_F1_B_ID_CARD,0,0,0,0);
   
-  /* Command Deck Keycard */   \
-  X(CASE_F1_B_LOCKER)          \
-  X(ITEM_F1_B_ID_CARD)         \
-  X(LOCK_S1_TO_F2_CARDLOCK)    \
-  X(FLAG_S1_TO_F2_UNLOCKED)    \
+  /* Command Deck Keycard */   
+ // X(CASE_F1_B_LOCKER)          
+  //X(ITEM_F1_B_ID_CARD)         
+ // X(LOCK_S1_TO_F2_CARDLOCK)    
+  //X(FLAG_S1_TO_F2_UNLOCKED)    
   // Maintenance Bay
   node_select( ODV9_F1_C );
   node_init("maintenance bay", NT_ROOM );
@@ -366,8 +375,8 @@ void populate_the_world_tree(void){
             "exposed to arctic conditions. A massive half-tracked vehicle "
             "is parked just inside the bay, beside a large rack of nuclear "
             "fuel cells.");
-  node_unlocked_by(ODV9_MCP_SUIT);
-  node_link(ODV9_FUEL_CELL, ODV9_REFUEL_CRAWLER, ODV9_UPLOAD_NAV_DATA, ODV9_ESCAPE_THE_OUTPOST, 0);
+  node_unlocked_by(ITEM_B1_A_SUIT);
+  node_link(ITEM_F1_C_FUEL_CELL, ODV9_REFUEL_CRAWLER, ODV9_UPLOAD_NAV_DATA, ODV9_ESCAPE_THE_OUTPOST, 0);
 
   // Command Center
   node_select( ODV9_F2_A );
@@ -378,7 +387,7 @@ void populate_the_world_tree(void){
             "various displays and control panels. None seem to be working, "
             "and the equipment at the 'COMMS' station has been smashed to "
             "pieces.");
-  node_link(ODV9_PRYBAR,0,0,0,0);
+  node_link(ITEM_F2_A_PRYBAR,0,0,0,0);
   
   // Surveillance Suite
   node_select( ODV9_F2_B );
@@ -419,36 +428,36 @@ void populate_the_world_tree(void){
             "switch is badly damaged, leaving it in the 'ON' position "
             "permanently.");
 
-  node_select( ODV9_CUTTING_TORCH );
+  node_select( ITEM_B1_B_CUTTING_TORCH );
   node_init("cutting torch", NT_ITEM);
 
-  node_select(ODV9_ID_CARD);
+  node_select( ITEM_F1_B_ID_CARD );
   node_init("id card", NT_ITEM);
   
-  node_select(ODV9_PRYBAR);
+  node_select(ITEM_F2_A_PRYBAR);
   node_init("prybar", NT_ITEM);
 
-  node_select(ODV9_PRY_OPEN_CRATE);
+  node_select(LOCK_B1_A_CRATE_SEALED);
   node_init("sealed crate", NT_FLAG);
   node_custom_asopt("pry open the sealed crate");
-  node_unlocked_by(ODV9_PRYBAR);
+  node_unlocked_by(ITEM_F2_A_PRYBAR);
   
-  node_select(ODV9_MCP_SUIT);
+  node_select(ITEM_B1_A_SUIT);
   node_init("environmental suit", NT_ITEM);
   node_custom_asopt("Put on the environmental suit.");
-  node_revealed_by(ODV9_PRY_OPEN_CRATE);
+  node_revealed_by(LOCK_B1_A_CRATE_SEALED);
   
   node_select(ODV9_REACTOR_CODES);
   node_init("authentication module", NT_ITEM);
 
-  node_select( ODV9_FUEL_CELL );
+  node_select( ITEM_F1_C_FUEL_CELL );
   node_init("fuel cell", NT_ITEM);
   node_custom_asopt("Take one of the fuel cells.");
   
   node_select( ODV9_REFUEL_REACTOR );
   node_init("refuel the reactor", NT_FLAG);
   node_custom_asopt( "Refuel the reactor using a fuel cell.");
-  node_unlocked_by(ODV9_FUEL_CELL);
+  node_unlocked_by(ITEM_F1_C_FUEL_CELL);
 
   node_select( ODV9_RESTART_REACTOR );
   node_init("restart the reactor", NT_FLAG);
