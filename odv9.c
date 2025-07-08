@@ -60,13 +60,19 @@
   X(ODV9_B1_C_DOOR_NOTE)       \
   X(ODV9_B1_C_POD_PANEL)       \
   /* ODV9 Critical Flags */    \
-  X(ODV9_CUTTING_TORCH)        \
-  X(ODV9_B1_TO_S1_DOOR)        \
-  X(ODV9_CUT_STAIRWELL_DOOR)   \
-  X(ODV9_ID_CARD)              \
-  X(ODV9_UNLOCK_COMMAND_DECK)  \
+  X(CASE_B1_B_TOOL_BOX)        \
+  X(ITEM_B1_B_CUTTING_TORCH)   \
+  X(LOCK_B1_TO_S1_WELDED)      \
+  X(FLAG_B1_TO_S1_IS_CUT)      \
+  /* Command Deck Keycard */   \
+  X(CASE_F1_B_LOCKER)          \
+  X(ITEM_F1_B_ID_CARD)         \
+  X(LOCK_S1_TO_F2_CARDLOCK)    \
+  X(FLAG_S1_TO_F2_UNLOCKED)    \
+  /* Sealed Crate in Storage */\
   X(ODV9_PRYBAR)               \
   X(ODV9_PRY_OPEN_CRATE)       \
+  /* Maint Bay Too Cold */     \
   X(ODV9_MCP_SUIT)             \
   X(ODV9_BAY_TOO_COLD)         \
   X(ODV9_FUEL_CELL)            \
@@ -235,12 +241,12 @@ void populate_the_world_tree(void){
   // Cryo Vault
   node_select( ODV9_B1_C );
   node_init("cryo vault", NT_ROOM);
-  node_desc("Cryo Vault", "bg-odv9-pixel-frame-cryo-vault.png", 
+  node_desc("Cryo Vault", "", 
             "An empty stasis pod dominates the room, its life support "
             "systems still softly clicking and humming. A warning light "
             "pulses on a control panel and a hand-written note is taped "
             "beside it. There is a large metal cabinet in one corner, "
-            "and a reinforced steel door directly across from it." );
+            "and a reinforced steel door directly across from it.");
   node_link(ODV9_B1_C_DOOR_NOTE, ODV9_B1_C_POD_PANEL, 0, 0, 0);
   
   // Basement Passage
@@ -261,7 +267,7 @@ void populate_the_world_tree(void){
   node_desc("Storage Room", "", 
             "This crowded storage room is lined with floor-to-ceiling "
             "racks full of boxes and crates. Decades worth of supplies "
-            "and replacement parts. There must be something useful in all this." );
+            "and replacement parts. There must be something useful in all this.");
   node_link(ODV9_PRY_OPEN_CRATE,ODV9_MCP_SUIT,0,0,0);
   
   // Reactor Room
@@ -271,19 +277,24 @@ void populate_the_world_tree(void){
             "A hulking fusion reactor occupies one half of this room. "
             "It looks nearly pristine, but requires specialized fuel cells "
             "to operate. The other half of the room has a long workbench "
-            "covered in a mess of tools and parts." );
+            "covered in a mess of tools and parts.");
   node_link(ODV9_CUTTING_TORCH, ODV9_REFUEL_REACTOR, ODV9_RESTART_REACTOR, 0, 0);
+
+  X(CASE_B1_B_TOOL_BOX)        \
+  X(ITEM_B1_B_CUTTING_TORCH)   \
+  X(LOCK_B1_TO_S1_WELDED)      \
+  X(FLAG_B1_TO_S1_IS_CUT)      \
   
   // Door between basement and stairwell. Welded, needs to be cut open.
-  node_select( ODV9_B1_TO_S1_DOOR );
+  node_select( LOCK_B1_TO_S1_WELDED );
   node_init("stairwell door", NT_PROP);
-  node_desc("Stairwell Door", "", 
+  node_desc("Stairwell Door, Welded Shut", "", 
             "The door between the basement and the stairwell has been "
             "welded shut from the basement side. The welding is crude but "
             "more than enough to prevent the door from opening. You'll "
-            "need some kind of tool to get this door open." );
-  node_rehidden_by(ODV9_CUT_STAIRWELL_DOOR);
-  node_link(ODV9_CUT_STAIRWELL_DOOR, 0, 0, 0, 0);
+            "need some kind of tool to get this door open.");
+  node_rehidden_by(FLAG_B1_TO_S1_IS_CUT);
+  node_link(FLAG_B1_TO_S1_IS_CUT, 0, 0, 0, 0);
   
   // Option to cut basement->stairwell door, visible on the door prop.
   node_select( ODV9_CUT_STAIRWELL_DOOR );
@@ -342,6 +353,11 @@ void populate_the_world_tree(void){
             "bathroom at the far end, barely larger than a closet.");
   node_link(ODV9_ID_CARD,0,0,0,0);
   
+  /* Command Deck Keycard */   \
+  X(CASE_F1_B_LOCKER)          \
+  X(ITEM_F1_B_ID_CARD)         \
+  X(LOCK_S1_TO_F2_CARDLOCK)    \
+  X(FLAG_S1_TO_F2_UNLOCKED)    \
   // Maintenance Bay
   node_select( ODV9_F1_C );
   node_init("maintenance bay", NT_ROOM );
@@ -371,7 +387,7 @@ void populate_the_world_tree(void){
             "This room feels out of place in the outpost; the displays "
             "and instruments have a sleek militaristic quality that seems "
             "slightly sinister. A single chair is surrounded by displays "
-            "and control panels like the cockpit of some kind of aircraft." );
+            "and control panels like the cockpit of some kind of aircraft.");
   node_link(ODV9_NAVIGATION_DATA,0,0,0,0);
   
   // Computer Core
@@ -381,7 +397,7 @@ void populate_the_world_tree(void){
             "This claustrophobic room is crammed with more server racks "
             "than seems reasonable for this outpost. They must require a "
             "massive amount of electricity to operate. There is a single "
-            "workstation for direct access." );
+            "workstation for direct access.");
   node_link(ODV9_REBOOT_COMPUTER, ODV9_REACTOR_CODES,0,0,0);
   
   node_select( ODV9_B1_C_DOOR_NOTE );
@@ -391,7 +407,7 @@ void populate_the_world_tree(void){
             "It reads:\n\n I won't remember writing this. The drugs are "
             "already working. I nee-YOU- need to leave. They know you're "
             "awake. It could take days but they WILL find you. Get to the "
-            "observatory. It will still be there. It has to be." );
+            "observatory. It will still be there. It has to be.");
   
   node_select( ODV9_B1_C_POD_PANEL );
   node_init("control panel", NT_PROP );
@@ -401,7 +417,7 @@ void populate_the_world_tree(void){
             "stasis cycle encountered no errors. A single warning light "
             "pulses next to a switch marked 'MAINTENANCE OVERRIDE'. The "
             "switch is badly damaged, leaving it in the 'ON' position "
-            "permanently." );
+            "permanently.");
 
   node_select( ODV9_CUTTING_TORCH );
   node_init("cutting torch", NT_ITEM);
@@ -465,7 +481,7 @@ void populate_the_world_tree(void){
   node_desc("Game Over: Escaped the Outpost", "", 
             "You drive away from the outpost in the Arctic Crawler, "
             "headed for the nearby Observatory.\n\nThank you for "
-            "playing Outpost DV9! Please look forward to the next chapter." );
+            "playing Outpost DV9! Please look forward to the next chapter.");
   node_unlocked_by(ODV9_UPLOAD_NAV_DATA);
 }
 ///////////////// THE STATE OF THE PLAYER //////////////////
@@ -541,7 +557,7 @@ int32_t main(void){
   SDL_Surface *SCREEN_SURFACE = create_surface(VIRTUAL_SCREEN_SIZE);
   SDL_Texture *SCREEN_TEXTURE = SDL_CreateTexture(REND, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 320, 240);
 
-  font_t *font_super = font_create("font_small_8.png",           0x1ac3e7aa, 0x00000066);
+  font_t *font_super = font_create("font-small-8.png",           0x1ac3e7aa, 0x00000066);
   font_t *font_title = font_create("font-terminess-14.png",     0x5de0fbff, 0x1ac3e766);
   font_t *font_prose = font_create("font-mnemonika-10.png",      0x1ac3e7ee, 0x00000066);
   
@@ -550,7 +566,7 @@ int32_t main(void){
   font_t *font_opt_select = font_create("font-mnemonika-10.png", 0x5de0fbFF, 0x5de0fb66);
 
   SDL_Surface *screen_clear = get_image("bg-odv9-pixel-frame.png");
-  SDL_Surface *pointer_image = get_image("cursor_arrow.png");
+  SDL_Surface *pointer_image = get_image("cursor-arrow.png");
   SDL_Surface *trans_buffer = create_surface(VIRTUAL_SCREEN_SIZE);
   uint8_t trans_alpha = 0;
   
