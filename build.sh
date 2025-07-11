@@ -3,6 +3,7 @@ gcc odv9.c                                 \
     -o odv9                                \
     -std=c11                               \
     -ggdb                                  \
+    -O0                                    \
     -Wall                                  \
     -Wextra                                \
     -Werror                                \
