@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 
 #define STB_DS_IMPLEMENTATION
@@ -1021,7 +1022,10 @@ int32_t main_event_watch(void *data, SDL_Event *e){
   return 0;
 }
 
-int32_t main(void){
+int main(int argc, char *argv[]){
+  (void)(argc); // ignore unused arg
+  (void)(argv); // ignore unused arg
+  
   SDL_Init(SDL_INIT_EVERYTHING);
   SDL_AddEventWatch(&main_event_watch, 0);
   controller_init();
@@ -1032,6 +1036,8 @@ int32_t main(void){
   SDL_Renderer *REND = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   SDL_Surface *SCREEN_SURFACE = create_surface(VIRTUAL_SCREEN_SIZE);
   SDL_Texture *SCREEN_TEXTURE = SDL_CreateTexture(REND, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 320, 240);
+
+  ready_static_images();
 
   font_t *font_super = font_create("font-small-8.png",           0x1ac3e7aa, 0x00000066);
   font_t *font_title = font_create("font-terminess-14.png",     0x5de0fbff, 0x1ac3e766);
