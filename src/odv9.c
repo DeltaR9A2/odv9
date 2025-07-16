@@ -33,6 +33,8 @@
 #define VIRTUAL_SCREEN_SIZE 320,240
 #define INITIAL_WINDOW_SIZE 960,720
 
+#define GAME_VERSION "VER-1-0-1"
+
 ///////////////////// TYPE DEFINITIONS /////////////////////
 
 #define TAG_LIST(X)              \
@@ -781,7 +783,7 @@ void populate_the_world_tree(void){
   node_select( ODV9_PROP_CRYO_PANEL );
   node_init("the pod's control panel", NT_PROP );
   node_desc("Cryopod Control Panel", "", 
-            "The pod's diagnostics no errors during your stasis. "
+            "The pod's diagnostics show zero errors during your stasis. "
             "A single warning light pulses next to a key-operated switch "
             "marked 'MAINTENANCE OVERRIDE'. The switch is stuck in the on "
             "position; the key is snapped off inside the lock.\n\nThere are "
@@ -1039,8 +1041,8 @@ int main(int argc, char *argv[]){
 
   ready_static_images();
 
-  font_t *font_super = font_create("font-small-8.png",           0x1ac3e7aa, 0x00000066);
-  font_t *font_title = font_create("font-terminess-14.png",     0x5de0fbff, 0x1ac3e766);
+  font_t *font_super = font_create("font-small-8.png",           0x1ac3e766, 0x00000033);
+  font_t *font_title = font_create("font-terminess-14.png",      0x5de0fbff, 0x1ac3e766);
   font_t *font_prose = font_create("font-mnemonika-10.png",      0x1ac3e7ee, 0x00000066);
   
   font_t *font_opt_normal = font_create("font-mnemonika-10.png", 0x1ac3e7cc, 0x00000066);
@@ -1101,14 +1103,16 @@ int main(int argc, char *argv[]){
         SDL_BlitSurface(screen_clear, NULL, SCREEN_SURFACE, NULL);
       }
 
-      font_draw_string(font_super, CURRENT_SCENE.super, 18, 16, SCREEN_SURFACE);
-      font_draw_string(font_title, CURRENT_SCENE.title, 18, 26, SCREEN_SURFACE);
-      font_wrap_string(font_prose, CURRENT_SCENE.prose, 18, 42, 274, SCREEN_SURFACE);
+      font_draw_string(font_super, CURRENT_SCENE.super, 16, 14, SCREEN_SURFACE);
+      font_draw_string(font_title, CURRENT_SCENE.title, 18, 24, SCREEN_SURFACE);
+      font_wrap_string(font_prose, CURRENT_SCENE.prose, 18, 40, 274, SCREEN_SURFACE);
+
+      font_draw_string(font_super, GAME_VERSION, 264, 14, SCREEN_SURFACE);
 
       for(int i=0; i < 6; i++){
         option_t *opt = &CURRENT_SCENE.options[i];
 
-        int y = 154+(i*(font_get_height(font_opt_normal)+1));
+        int y = 158+(i*(font_get_height(font_opt_normal)+1));
 
         if(opt->target == NULL){ 
           font_draw_string(font_opt_dimmed, opt->label, 22, y, SCREEN_SURFACE);
